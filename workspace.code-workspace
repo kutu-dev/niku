@@ -1,0 +1,49 @@
+{
+	"folders": [
+		{
+			"name": "Root",
+			"path": ".",
+		},
+		{
+			"name": "Backend",
+			"path": "./projects/backend",
+		},
+		{
+			"name": "Cli",
+			"path": "./projects/cli",
+		},
+	],
+
+	"settings": {
+		"rust-analyzer.checkOnSave.command": "clippy",
+
+		"search.exclude": {
+			"**/target/": true
+    	},
+
+		"files.exclude": {
+			// Ignore it to avoid root clutter
+			"projects/": true,
+
+			"**/target/": true
+		},
+
+		"cSpell.words": [
+		],
+	},
+
+	"extensions": {
+		"recommendations": [
+			// General
+			"streetsidesoftware.code-spell-checker",
+			"me-dutour-mathieu.vscode-github-actions",
+
+			// Nix
+			"bbenoist.Nix",
+
+			// Rust
+			"rust-lang.rust-analyzer",
+			"dustypomerleau.rust-syntax",
+		],
+	},
+}

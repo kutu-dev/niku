@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+    "projects/backend",
+    "projects/cli"
+]
+
+[workspace.lints.rust]
+"missing_docs" = "warn"
