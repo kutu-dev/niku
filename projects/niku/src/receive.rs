@@ -10,7 +10,7 @@ use iroh::protocol::Router;
 use iroh_blobs::rpc::client::blobs::{MemClient, WrapOption};
 use iroh_blobs::util::SetTagOption;
 use log::{debug, info};
-use niku_core::UploadTicket;
+use niku_core::ObjectTicket;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -32,7 +32,7 @@ pub(crate) async fn receive(
         .send()
         .await
         .map_err(ReceiveError::BackendRequestFailed)?
-        .json::<UploadTicket>()
+        .json::<ObjectTicket>()
         .await
         .map_err(ReceiveError::BackendRequestFailed)?;
 

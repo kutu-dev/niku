@@ -1,14 +1,16 @@
 use core::error;
 use std::io;
 use std::path::PathBuf;
+use std::time::Duration;
 
 use iroh::protocol::Router;
 use iroh_blobs::rpc::client::blobs::{MemClient, WrapOption};
 use iroh_blobs::util::SetTagOption;
-use log::{debug, info};
-use niku_core::UploadTicket;
+use log::debug;
+use niku_core::{ObjectKeepAliveRequest, ObjectRegistrationData, ObjectTicket};
 use reqwest::Client;
 use thiserror::Error;
+use tokio::time;
 
 #[derive(Error, Debug)]
 pub enum SendError {
@@ -41,28 +43,44 @@ pub(crate) async fn send(
         .finish()
         .await?;
 
-    let ticket = UploadTicket {
+    let ticket = ObjectTicket {
         node_addr: router.endpoint().node_addr().await?,
         file_hash: blob.hash,
     };
 
     debug!("Uploading ticket: {ticket:?}");
 
-    let id = client
+    let registration_data = client
         .put("http://localhost:4000/files")
         .json(&ticket)
         .send()
         .await
         .map_err(SendError::BackendRequestFailed)?
-        .text()
+        .json::<ObjectRegistrationData>()
         .await
         .map_err(SendError::BackendRequestFailed)?;
 
-    info!("Your file ID is: {id}");
+    println!(
+        "Your file ID is: {} ({})",
+        registration_data.id, registration_data.keep_alive_key
+    );
 
-    tokio::signal::ctrl_c()
-        .await
-        .map_err(SendError::WaitOnCtrlCFailed)?;
+    let mut interval = time::interval(Duration::from_secs(1));
 
-    Ok(())
+    loop {
+        debug!("Keeping alive the connection!");
+
+        interval.tick().await;
+        client
+            .post(format!(
+                "http://localhost:4000/files/{}",
+                registration_data.id
+            ))
+            .json(&ObjectKeepAliveRequest {
+                keep_alive_key: registration_data.keep_alive_key.clone(),
+            })
+            .send()
+            .await
+            .map_err(SendError::BackendRequestFailed)?;
+    }
 }
