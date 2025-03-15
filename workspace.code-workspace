@@ -5,30 +5,37 @@
 			"path": ".",
 		},
 		{
-			"name": "Backend",
-			"path": "./projects/backend",
+			"name": "Niku",
+			"path": "./projects/niku",
 		},
 		{
-			"name": "Cli",
-			"path": "./projects/cli",
+			"name": "Niku Core",
+			"path": "./projects/niku_core",
+		},
+		{
+			"name": "Niku Backend",
+			"path": "./projects/niku_backend",
 		},
 	],
 
 	"settings": {
 		"rust-analyzer.checkOnSave.command": "clippy",
+		"editor.formatOnSave": true,
 
 		"search.exclude": {
 			"**/target/": true
     	},
 
 		"files.exclude": {
-			// Ignore it to avoid root clutter
-			"projects/": true,
-
 			"**/target/": true
 		},
 
 		"cSpell.words": [
+			"ALPN",
+			"iroh",
+			"niku",
+			"thiserror",
+			"tungstenite"
 		],
 	},
 

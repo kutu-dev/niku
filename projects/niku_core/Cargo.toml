@@ -1,0 +1,14 @@
+[package]
+name = "niku_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = { workspace = true }
+env_logger = { workspace = true }
+serde = { workspace = true }
+iroh = { workspace = true }
+iroh-blobs = { workspace = true }
+
+[lints]
+workspace = true
