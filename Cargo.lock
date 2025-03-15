@@ -2605,6 +2605,7 @@ dependencies = [
  "rand 0.9.0",
  "thiserror 2.0.12",
  "tokio",
+ "uuid",
 ]
 
 [[package]]

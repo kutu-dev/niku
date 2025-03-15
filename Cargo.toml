@@ -3,6 +3,7 @@ resolver = "2"
 members = ["projects/*"]
 
 [workspace.dependencies]
+uuid = { version = "1.16.0", features = ["v4"] }
 axum = "0.8.1"
 tokio = { version = "1.44.1", features = ["full"] }
 anyhow = "1.0.97"
@@ -19,3 +20,20 @@ rand = "0.9.0"
 
 [workspace.lints.rust]
 "missing_docs" = "warn"
+
+[workspace.lints.clippy]
+single_match = "warn"
+single_match_else = "warn"
+needless_match = "warn"
+needless_late_init = "warn"
+redundant_pattern_matching = "warn"
+redundant_pattern = "warn"
+redundant_guards = "warn"
+collapsible_match = "warn"
+match_single_binding = "warn"
+match_same_arms = "warn"
+match_ref_pats = "warn"
+match_bool = "warn"
+needless_bool = "deny"
+unwrap_used = "warn"
+expect_used = "warn"

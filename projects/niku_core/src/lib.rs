@@ -11,17 +11,28 @@ use std::io::Write;
 pub use log;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UploadTicket {
+pub struct ObjectTicket {
     pub node_addr: NodeAddr,
     pub file_hash: Hash,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ObjectRegistrationData {
+    pub id: String,
+    pub keep_alive_key: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ObjectKeepAliveRequest {
+    pub keep_alive_key: String,
+}
+
 /// Set a useful default configuration for logging with [env_logger].
 pub fn set_logging() {
-    // Set the minimum log level to `info`
+    // Set the minimum log level to `warn`
     // TRACK: https://github.com/rust-cli/env_logger/issues/162
-    env_logger::Builder::from_env(Env::default().default_filter_or("info"))
-        .format(|buf, record| {
+    env_logger::Builder::from_env(Env::default().default_filter_or("warn"))
+        .format(move |buf, record| {
             let bold_red_style = Style::new().bold().fg_color(Some(AnsiColor::Red.into()));
             let bold_cyan_style = Style::new().bold().fg_color(Some(AnsiColor::Cyan.into()));
             let bold_green_style = Style::new().bold().fg_color(Some(AnsiColor::Green.into()));
