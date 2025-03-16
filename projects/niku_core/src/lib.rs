@@ -1,4 +1,4 @@
-//! Share code for all the crates of the NIKU project.
+//! Shared code for all the crates of the NIKU project.
 
 use std::io::Write;
 
@@ -37,7 +37,7 @@ pub struct ObjectKeepAliveRequest {
     pub keep_alive_key: String,
 }
 
-/// Set a useful default configuration for logging with [env_logger].
+/// Set a useful default configuration for CLI logging with [env_logger].
 pub fn set_logging(info_is_default: bool) {
     let default_level = if info_is_default { "info" } else { "warn" };
 
