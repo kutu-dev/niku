@@ -2,8 +2,12 @@
 
 ## Niku CLI
 
-- Support for https://github.com/zip-rs/zip2 folders
-- Hint for '-' on send help
+- Send
+  - DRY
+  - Print about what is happening
+  - Better error messages
+  - Allow stdin for texts
+  - Hint for '-' on send help
 
 ## Monorepo
 

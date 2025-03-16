@@ -20,6 +20,8 @@ use zip::{CompressionMethod, ZipWriter};
 
 use crate::BASE_BACKEND_URL;
 
+const BYTES_IN_A_KIBIBYTE: u64 = 1024;
+
 #[derive(Error, Debug)]
 pub enum SendError {
     #[error("Canonicalize the file path failed: {0}")]
@@ -28,8 +30,11 @@ pub enum SendError {
     #[error("An Iroh error has occurred: {0}")]
     IrohError(#[from] anyhow::Error),
 
-    #[error("Unable to send the file ticket to the server: {0}")]
-    BackendRequestFailed(#[source] reqwest::Error),
+    #[error("Unable to send the object to the backend server: {0}")]
+    SendFileObjectFailed(#[source] reqwest::Error),
+
+    #[error("Unable keep alive the object on the server: {0}")]
+    KeepAliveFailed(#[source] reqwest::Error),
 
     #[error("The given path is not a file or a folder")]
     InvalidFileKind,
@@ -76,12 +81,11 @@ async unsafe fn create_file_object_entry(
         .ok_or(SendError::NotUnicodeFilename)?
         .to_string();
 
-    println!("📤 Sending file '{file_name}'");
-
     Ok(ObjectEntry {
         node_address: router.endpoint().node_addr().await?,
         file_hash: blob.hash,
         kind: ObjectKind::File { name: file_name },
+        size: blob.size,
     })
 }
 
@@ -160,6 +164,7 @@ async unsafe fn create_folder_object_entry(
         node_address: router.endpoint().node_addr().await?,
         file_hash: blob.hash,
         kind: ObjectKind::Folder { name: dir_name },
+        size: blob.size,
     })
 }
 
@@ -192,13 +197,17 @@ pub(crate) async fn send(
         .json(&object)
         .send()
         .await
-        .map_err(SendError::BackendRequestFailed)?
+        .map_err(SendError::SendFileObjectFailed)?
         .json::<RegisteredObjectData>()
         .await
-        .map_err(SendError::BackendRequestFailed)?;
+        .map_err(SendError::SendFileObjectFailed)?;
 
     let object_id_dashed = registration_data.id.replace(" ", "-");
 
+    println!(
+        "📤 Sending object ({} KiB)",
+        object.size / BYTES_IN_A_KIBIBYTE
+    );
     println!(
         "  Your ID is: '{}' ({})",
         registration_data.id, object_id_dashed
@@ -226,6 +235,6 @@ pub(crate) async fn send(
             })
             .send()
             .await
-            .map_err(SendError::BackendRequestFailed)?;
+            .map_err(SendError::KeepAliveFailed)?;
     }
 }

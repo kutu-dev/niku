@@ -37,6 +37,9 @@ pub struct ObjectEntry {
 
     /// The kind of object to be download.
     pub kind: ObjectKind,
+
+    /// The number of bytes of the object.
+    pub size: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
