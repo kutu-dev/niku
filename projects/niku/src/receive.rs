@@ -21,7 +21,7 @@ pub(crate) async fn receive(
     blobs_client: &MemClient,
 ) -> Result<(), ReceiveError> {
     let ticket = client
-        .get(format!("http://localhost:4000/files/{id}"))
+        .get(format!("http://localhost:4000/objects/{id}"))
         .send()
         .await
         .map_err(ReceiveError::BackendRequestFailed)?

@@ -36,6 +36,8 @@
 			"iroh",
 			"niku",
 			"NKBE",
+			"reqwest",
+			"serde",
 			"thiserror"
 		],
 	},

@@ -11,6 +11,23 @@ use log::Level;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+/// The kind of an object
+pub enum ObjectKind {
+    /// The object is a file
+    File {
+        /// The name of the file
+        name: String,
+    },
+    /*
+    /// The object is a folder
+    Folder {
+        /// The name of the folder
+        name: String,
+    },
+    */
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 /// Entry that holds the relevant data of a object available for downloading.
 pub struct ObjectEntry {
     /// The [iroh] address of the node that is hosting the file.
@@ -18,6 +35,9 @@ pub struct ObjectEntry {
 
     /// The file hash used by [iroh_blobs] protocol to access the file.
     pub file_hash: Hash,
+
+    /// The kind of object to be download.
+    pub kind: ObjectKind,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -38,12 +58,10 @@ pub struct ObjectKeepAliveRequest {
 }
 
 /// Set a useful default configuration for CLI logging with [env_logger].
-pub fn set_logging(info_is_default: bool) {
-    let default_level = if info_is_default { "info" } else { "warn" };
-
+pub fn set_cli_logging() {
     // Set the minimum log level to `warn`
     // TRACK: https://github.com/rust-cli/env_logger/issues/162
-    env_logger::Builder::from_env(Env::default().default_filter_or(default_level))
+    env_logger::Builder::from_env(Env::default().default_filter_or("warn"))
         .format(move |buf, record| {
             let bold_red_style = Style::new().bold().fg_color(Some(AnsiColor::Red.into()));
             let bold_cyan_style = Style::new().bold().fg_color(Some(AnsiColor::Cyan.into()));

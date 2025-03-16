@@ -20,3 +20,7 @@ serde_json = { workspace = true }
 
 [lints]
 workspace = true
+
+[profile.release]
+strip = true
+lto = true
