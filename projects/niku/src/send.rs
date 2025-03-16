@@ -1,4 +1,3 @@
-use core::error;
 use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -7,7 +6,7 @@ use iroh::protocol::Router;
 use iroh_blobs::rpc::client::blobs::{MemClient, WrapOption};
 use iroh_blobs::util::SetTagOption;
 use log::debug;
-use niku_core::{ObjectKeepAliveRequest, ObjectRegistrationData, ObjectTicket};
+use niku_core::{ObjectEntry, ObjectKeepAliveRequest, RegisteredObjectData};
 use reqwest::Client;
 use thiserror::Error;
 use tokio::time;
@@ -43,20 +42,20 @@ pub(crate) async fn send(
         .finish()
         .await?;
 
-    let ticket = ObjectTicket {
-        node_addr: router.endpoint().node_addr().await?,
+    let ticket = ObjectEntry {
+        node_address: router.endpoint().node_addr().await?,
         file_hash: blob.hash,
     };
 
     debug!("Uploading ticket: {ticket:?}");
 
     let registration_data = client
-        .put("http://localhost:4000/files")
+        .put("http://localhost:4000/objects")
         .json(&ticket)
         .send()
         .await
         .map_err(SendError::BackendRequestFailed)?
-        .json::<ObjectRegistrationData>()
+        .json::<RegisteredObjectData>()
         .await
         .map_err(SendError::BackendRequestFailed)?;
 
@@ -73,7 +72,7 @@ pub(crate) async fn send(
         interval.tick().await;
         client
             .post(format!(
-                "http://localhost:4000/files/{}",
+                "http://localhost:4000/objects/{}/keep-alive",
                 registration_data.id
             ))
             .json(&ObjectKeepAliveRequest {

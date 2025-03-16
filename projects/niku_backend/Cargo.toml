@@ -11,6 +11,11 @@ thiserror = { workspace = true }
 log = { workspace = true }
 rand = { workspace = true }
 uuid = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }
+const_format = { workspace = true }
 
 [lints]
 workspace = true

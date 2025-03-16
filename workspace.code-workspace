@@ -32,9 +32,11 @@
 
 		"cSpell.words": [
 			"ALPN",
+			"formatcp",
 			"iroh",
 			"niku",
-			"thiserror",
+			"NKBE",
+			"thiserror"
 		],
 	},
 

@@ -17,6 +17,10 @@ env_logger = "0.11.7"
 serde = { version = "1.0.219", features = ["derive"] }
 reqwest = { version = "0.12.14", features = ["json"] }
 rand = "0.9.0"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+tower-http = { version = "0.6.2", features = ["trace"] }
+const_format = "0.2.34"
 
 [workspace.lints.rust]
 "missing_docs" = "warn"

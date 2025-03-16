@@ -1,41 +1,53 @@
-//! Share code for all the crates on the NIKU project.
+//! Share code for all the crates of the NIKU project.
+
+use std::io::Write;
 
 use env_logger::fmt::style::{AnsiColor, Style};
 use env_logger::Env;
 use iroh::NodeAddr;
 use iroh_blobs::Hash;
+pub use log;
 use log::Level;
 use serde::{Deserialize, Serialize};
-use std::io::Write;
-
-pub use log;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ObjectTicket {
-    pub node_addr: NodeAddr,
+/// Entry that holds the relevant data of a object available for downloading.
+pub struct ObjectEntry {
+    /// The [iroh] address of the node that is hosting the file.
+    pub node_address: NodeAddr,
+
+    /// The file hash used by [iroh_blobs] protocol to access the file.
     pub file_hash: Hash,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ObjectRegistrationData {
+/// Relevant metadata about the state of the uploaded object on the backend server.
+pub struct RegisteredObjectData {
+    /// The ID of the object.
     pub id: String,
+
+    /// A private UUIDv4 that must be used on a [ObjectKeepAliveRequest] to avoid the backend server deleting the object entry.
     pub keep_alive_key: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+/// Request that can be send to the backend server the avoid it deleting the object entry.
 pub struct ObjectKeepAliveRequest {
+    /// The private UUIDv4 that has been returned by [RegisteredObjectData] used to identify and authenticate the object refresh.
     pub keep_alive_key: String,
 }
 
 /// Set a useful default configuration for logging with [env_logger].
-pub fn set_logging() {
+pub fn set_logging(info_is_default: bool) {
+    let default_level = if info_is_default { "info" } else { "warn" };
+
     // Set the minimum log level to `warn`
     // TRACK: https://github.com/rust-cli/env_logger/issues/162
-    env_logger::Builder::from_env(Env::default().default_filter_or("warn"))
+    env_logger::Builder::from_env(Env::default().default_filter_or(default_level))
         .format(move |buf, record| {
             let bold_red_style = Style::new().bold().fg_color(Some(AnsiColor::Red.into()));
             let bold_cyan_style = Style::new().bold().fg_color(Some(AnsiColor::Cyan.into()));
-            let bold_green_style = Style::new().bold().fg_color(Some(AnsiColor::Green.into()));
+            let bold_green_style = Style::new().bold().fg_color(Some(AnsiColor::Blue.into()));
             let bold_yellow_style = Style::new().bold().fg_color(Some(AnsiColor::Yellow.into()));
             let bold_magenta_style = Style::new()
                 .bold()

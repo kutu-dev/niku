@@ -1,16 +1,9 @@
-use iroh_blobs::store::{ExportFormat, ExportMode};
-use reqwest::Client;
-
-use core::error;
 use std::env::home_dir;
-use std::io;
-use std::path::PathBuf;
 
-use iroh::protocol::Router;
-use iroh_blobs::rpc::client::blobs::{MemClient, WrapOption};
-use iroh_blobs::util::SetTagOption;
-use log::{debug, info};
-use niku_core::ObjectTicket;
+use iroh_blobs::rpc::client::blobs::MemClient;
+use iroh_blobs::store::{ExportFormat, ExportMode};
+use niku_core::ObjectEntry;
+use reqwest::Client;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -32,14 +25,14 @@ pub(crate) async fn receive(
         .send()
         .await
         .map_err(ReceiveError::BackendRequestFailed)?
-        .json::<ObjectTicket>()
+        .json::<ObjectEntry>()
         .await
         .map_err(ReceiveError::BackendRequestFailed)?;
 
     println!("{ticket:?}");
 
     blobs_client
-        .download(ticket.file_hash, ticket.node_addr.clone())
+        .download(ticket.file_hash, ticket.node_address.clone())
         .await?
         .finish()
         .await?;

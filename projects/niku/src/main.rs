@@ -8,12 +8,11 @@ use iroh::protocol::Router;
 use iroh::Endpoint;
 use iroh_blobs::net_protocol::Blobs;
 use log::error;
+use niku_core::set_logging;
 use receive::ReceiveError;
 use reqwest::Client;
 use send::SendError;
 use thiserror::Error;
-
-use niku_core::set_logging;
 
 const VERSION: &str = "0.0.1";
 const BASE_BACKEND_URL: &str = "http://localhost:4817";
@@ -54,7 +53,7 @@ enum RunError {
 }
 
 async fn run() -> Result<(), RunError> {
-    set_logging();
+    set_logging(false);
 
     let client = Client::new();
 
