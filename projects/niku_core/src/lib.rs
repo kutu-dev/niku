@@ -18,13 +18,12 @@ pub enum ObjectKind {
         /// The name of the file
         name: String,
     },
-    /*
+
     /// The object is a folder
     Folder {
         /// The name of the folder
         name: String,
     },
-    */
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

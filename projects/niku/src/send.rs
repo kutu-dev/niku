@@ -1,16 +1,22 @@
-use core::error;
 use std::io;
-use std::path::PathBuf;
+use std::path::{PathBuf, StripPrefixError};
 use std::time::Duration;
 
 use iroh::protocol::Router;
 use iroh_blobs::rpc::client::blobs::{MemClient, WrapOption};
 use iroh_blobs::util::SetTagOption;
-use log::debug;
-use niku_core::{ObjectEntry, ObjectKeepAliveRequest, RegisteredObjectData};
+use log::{debug, info, warn};
+use niku_core::{ObjectEntry, ObjectKeepAliveRequest, ObjectKind, RegisteredObjectData};
 use reqwest::Client;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::Cursor;
 use thiserror::Error;
 use tokio::time;
+use walkdir::WalkDir;
+use zip::result::ZipError;
+use zip::write::{FileOptions, SimpleFileOptions};
+use zip::{CompressionMethod, ZipWriter};
 
 use crate::BASE_BACKEND_URL;
 
@@ -25,11 +31,26 @@ pub enum SendError {
     #[error("Unable to send the file ticket to the server: {0}")]
     BackendRequestFailed(#[source] reqwest::Error),
 
-    #[error("The given file is not a plain file or a folder")]
+    #[error("The given path is not a file or a folder")]
     InvalidFileKind,
 
     #[error("The given file or folder doesn't have a Unicode filename")]
     NotUnicodeFilename,
+
+    #[error("Trying to compress the folder failed: {0}")]
+    ZipError(#[from] ZipError),
+
+    #[error("Unable to do a IO operation over the in memory ZIP file: {0}")]
+    ZipIoError(#[source] io::Error),
+
+    #[error("Unable to open one of the files of the selected folder: {0}")]
+    OpenFileFromFolderFailed(#[source] io::Error),
+
+    #[error("Unable to strip the prefix from the given directory: {0}")]
+    StripPrefixError(#[from] StripPrefixError),
+
+    #[error("Unable to walk the folder: {0}")]
+    WalkError(#[from] walkdir::Error),
 }
 
 /// Creates a new object entry for a file.
@@ -47,6 +68,7 @@ async unsafe fn create_file_object_entry(
         .finish()
         .await?;
 
+    #[allow(clippy::expect_used)]
     let file_name = path
         .file_name()
         .expect("The path is always for a real file")
@@ -59,20 +81,87 @@ async unsafe fn create_file_object_entry(
     Ok(ObjectEntry {
         node_address: router.endpoint().node_addr().await?,
         file_hash: blob.hash,
-        kind: niku_core::ObjectKind::File { name: file_name },
+        kind: ObjectKind::File { name: file_name },
     })
 }
 
-/*
-async fn create_directory_object_entry(
-    path: &PathBuf,
+/// Creates a new object entry for a folder.
+///
+/// # Safety
+/// Doesn't check if the given path is for a folder.
+async unsafe fn create_folder_object_entry(
+    base_path: &PathBuf,
     blobs_client: &MemClient,
     router: &Router,
 ) -> Result<ObjectEntry, SendError> {
+    let mut data = Vec::new();
+    let walkdir = WalkDir::new(base_path);
 
+    #[allow(clippy::expect_used)]
+    let dir_name = base_path
+        .clone()
+        .file_name()
+        .expect("The path is always for a real file")
+        .to_str()
+        .ok_or(SendError::NotUnicodeFilename)?
+        .to_string();
 
+    {
+        let blob_buffer = Cursor::new(&mut data);
+        let mut zip = ZipWriter::new(blob_buffer);
+        let options = SimpleFileOptions::default()
+            .compression_method(CompressionMethod::Deflated)
+            .unix_permissions(0o755);
+
+        let mut buffer = Vec::new();
+
+        for entry in walkdir {
+            let entry = entry?;
+
+            let path = entry.path();
+            let name = path.strip_prefix(base_path)?;
+            let path_as_string = name
+                .to_str()
+                .ok_or(SendError::NotUnicodeFilename)?
+                .to_owned();
+
+            if name.as_os_str().is_empty() {
+                continue;
+            }
+
+            if path.is_file() {
+                zip.start_file(path_as_string, options)?;
+                let mut file = File::open(path).map_err(SendError::OpenFileFromFolderFailed)?;
+
+                file.read_to_end(&mut buffer)
+                    .map_err(SendError::ZipIoError)?;
+
+                zip.write_all(&buffer).map_err(SendError::ZipIoError)?;
+                buffer.clear();
+
+                continue;
+            }
+
+            if path.is_dir() {
+                zip.add_directory(path_as_string, options)?;
+
+                continue;
+            }
+
+            warn!("Skipping file: {path_as_string}, it's neither a plain file or a directory!");
+        }
+
+        zip.finish()?;
+    }
+
+    let blob = blobs_client.add_bytes(data).await?;
+
+    Ok(ObjectEntry {
+        node_address: router.endpoint().node_addr().await?,
+        file_hash: blob.hash,
+        kind: ObjectKind::Folder { name: dir_name },
+    })
 }
-*/
 
 pub(crate) async fn send(
     path: &str,
@@ -89,6 +178,8 @@ pub(crate) async fn send(
 
         if path.is_file() {
             unsafe { create_file_object_entry(&path, blobs_client, router).await }
+        } else if path.is_dir() {
+            unsafe { create_folder_object_entry(&path, blobs_client, router).await }
         } else {
             Err(SendError::InvalidFileKind)
         }
@@ -106,10 +197,15 @@ pub(crate) async fn send(
         .await
         .map_err(SendError::BackendRequestFailed)?;
 
-    println!("  Your ID is: '{}'", registration_data.id);
+    let object_id_dashed = registration_data.id.replace(" ", "-");
+
+    println!(
+        "  Your ID is: '{}' ({})",
+        registration_data.id, object_id_dashed
+    );
     println!();
     println!("📥 On the other device, please run:");
-    println!("  niku receive '{}'", registration_data.id);
+    println!("  niku receive {}", object_id_dashed);
     println!();
     println!("🌐 Or use one of the official GUI apps:");
     println!("  https://niku.app/download");

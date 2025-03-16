@@ -38,7 +38,8 @@
 			"NKBE",
 			"reqwest",
 			"serde",
-			"thiserror"
+			"thiserror",
+			"walkdir"
 		],
 	},
 

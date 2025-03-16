@@ -3,6 +3,7 @@
 ## Niku CLI
 
 - Support for https://github.com/zip-rs/zip2 folders
+- Hint for '-' on send help
 
 ## Monorepo
 
