@@ -16,6 +16,7 @@ log = { workspace = true }
 reqwest = { workspace = true }
 zip = { workspace = true }
 walkdir = { workspace = true }
+text_io = "0.1.13"
 
 [lints]
 workspace = true

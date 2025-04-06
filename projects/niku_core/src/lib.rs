@@ -1,5 +1,6 @@
 //! Shared code for all the crates of the NIKU project.
 
+use std::fmt::{Debug, Display};
 use std::io::Write;
 
 use env_logger::fmt::style::{AnsiColor, Style};
@@ -24,6 +25,17 @@ pub enum ObjectKind {
         /// The name of the folder
         name: String,
     },
+}
+
+impl Display for ObjectKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let text = match self {
+            ObjectKind::File { name: _ } => "file",
+            ObjectKind::Folder { name: _ } => "folder",
+        };
+
+        write!(f, "{}", text)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

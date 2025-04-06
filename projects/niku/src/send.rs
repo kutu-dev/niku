@@ -18,9 +18,8 @@ use zip::result::ZipError;
 use zip::write::{FileOptions, SimpleFileOptions};
 use zip::{CompressionMethod, ZipWriter};
 
+use crate::string::format_bytes_to_string;
 use crate::BASE_BACKEND_URL;
-
-const BYTES_IN_A_KIBIBYTE: u64 = 1024;
 
 #[derive(Error, Debug)]
 pub enum SendError {
@@ -110,6 +109,7 @@ async unsafe fn create_folder_object_entry(
         .ok_or(SendError::NotUnicodeFilename)?
         .to_string();
 
+    // The mess needed to zip the folder
     {
         let blob_buffer = Cursor::new(&mut data);
         let mut zip = ZipWriter::new(blob_buffer);
@@ -120,6 +120,8 @@ async unsafe fn create_folder_object_entry(
         let mut buffer = Vec::new();
 
         for entry in walkdir {
+            println!("{entry:?}");
+
             let entry = entry?;
 
             let path = entry.path();
@@ -205,8 +207,9 @@ pub(crate) async fn send(
     let object_id_dashed = registration_data.id.replace(" ", "-");
 
     println!(
-        "📤 Sending object ({} KiB)",
-        object.size / BYTES_IN_A_KIBIBYTE
+        "📤 Sending {} ({})",
+        object.kind,
+        format_bytes_to_string(object.size)
     );
     println!(
         "  Your ID is: '{}' ({})",

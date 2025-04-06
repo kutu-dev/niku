@@ -2,13 +2,13 @@
 
 mod receive;
 mod send;
+mod string;
 
 use clap::{arg, Command};
 use iroh::protocol::Router;
 use iroh::Endpoint;
 use iroh_blobs::net_protocol::Blobs;
 use log::error;
-use niku_core::set_cli_logging;
 use receive::ReceiveError;
 use reqwest::Client;
 use send::SendError;

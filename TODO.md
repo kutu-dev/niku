@@ -3,11 +3,11 @@
 ## Niku CLI
 
 - Send
-  - DRY
   - Print about what is happening
   - Better error messages
   - Allow stdin for texts
   - Hint for '-' on send help
+  - Custom -o
 
 ## Monorepo
 

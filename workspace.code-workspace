@@ -17,19 +17,16 @@
 			"path": "./projects/niku_backend",
 		},
 	],
-
 	"settings": {
 		"rust-analyzer.checkOnSave.command": "clippy",
 		"editor.formatOnSave": true,
-
 		"search.exclude": {
 			"**/target/": true
-    	},
-
-		"files.exclude": {
-			"**/target/": true
 		},
-
+		"files.exclude": {
+			"**/target/": true,
+			"projects/": true
+		},
 		"cSpell.words": [
 			"ALPN",
 			"formatcp",
@@ -43,16 +40,13 @@
 			"walkdir"
 		],
 	},
-
 	"extensions": {
 		"recommendations": [
 			// General
 			"streetsidesoftware.code-spell-checker",
 			"me-dutour-mathieu.vscode-github-actions",
-
 			// Nix
 			"bbenoist.Nix",
-
 			// Rust
 			"rust-lang.rust-analyzer",
 			"dustypomerleau.rust-syntax",
