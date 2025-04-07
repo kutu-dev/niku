@@ -1,4 +1,4 @@
-use std::env::{self, home_dir};
+use std::env::{self};
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -7,9 +7,8 @@ use iroh_blobs::store::{ExportFormat, ExportMode};
 use niku_core::{ObjectEntry, ObjectKind};
 use reqwest::Client;
 use thiserror::Error;
-use tokio::fs::{self, File};
 
-use crate::string::format_bytes_to_string;
+use crate::format_bytes_to_string;
 
 #[derive(Error, Debug)]
 pub enum ReceiveError {
@@ -18,6 +17,12 @@ pub enum ReceiveError {
 
     #[error("The current working directory is not usable: {0}")]
     CurrentWorkingDirectoryInvalid(#[source] io::Error),
+
+    #[error("Unable to open the cached compressed file: {0}")]
+    UnableToOpenTheCachedFile(#[source] io::Error),
+
+    #[error("Unable to handle the ZIP file: {0}")]
+    ZipError(#[from] zip::result::ZipError),
 
     #[error("An unknown has occurred: {0}")]
     Unknown(#[from] anyhow::Error),
@@ -85,9 +90,11 @@ pub(crate) async fn receive(
         }
 
         ObjectKind::Folder { name: _ } => {
-            let mut tmp_zip_path = PathBuf::new();
-            tmp_zip_path.push("/tmp/niku");
-            tmp_zip_path.push(object_entry.file_hash.to_string());
+            #[allow(clippy::expect_used)]
+            let mut tmp_zip_path = dirs::cache_dir()
+                .expect("NIKU is not available on platforms without a cache storage");
+            tmp_zip_path.push("app.niku/downloads");
+            tmp_zip_path.push(format!("{}.zip", object_entry.file_hash.to_string()));
 
             blobs_client
                 .export(
@@ -100,24 +107,21 @@ pub(crate) async fn receive(
                 .finish()
                 .await?;
 
-            let file = std::fs::File::open(tmp_zip_path).unwrap();
-            let mut archive = zip::ZipArchive::new(file).unwrap();
+            let file = std::fs::File::open(tmp_zip_path)
+                .map_err(ReceiveError::UnableToOpenTheCachedFile)?;
+            let mut archive = zip::ZipArchive::new(file)?;
 
             for i in 0..archive.len() {
-                let mut file = archive.by_index(i).unwrap();
+                #[allow(clippy::expect_used)]
+                let mut file = archive
+                    .by_index(i)
+                    .expect("The file should always have an index");
                 let outpath = match file.enclosed_name() {
                     Some(path) => path,
                     None => continue,
                 };
 
                 let outpath = Path::new(&object_name).join(outpath);
-
-                {
-                    let comment = file.comment();
-                    if !comment.is_empty() {
-                        println!("File {i} comment: {comment}");
-                    }
-                }
 
                 if file.is_dir() {
                     println!("File {} extracted to \"{}\"", i, outpath.display());

@@ -1,25 +1,31 @@
+use std::fs::File;
 use std::io;
+use std::io::prelude::*;
+use std::io::stdout;
+use std::io::Cursor;
 use std::path::{PathBuf, StripPrefixError};
 use std::time::Duration;
 
 use iroh::protocol::Router;
 use iroh_blobs::rpc::client::blobs::{MemClient, WrapOption};
 use iroh_blobs::util::SetTagOption;
-use log::{debug, info, warn};
+use log::{debug, warn};
 use niku_core::{ObjectEntry, ObjectKeepAliveRequest, ObjectKind, RegisteredObjectData};
 use reqwest::Client;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::Cursor;
 use thiserror::Error;
 use tokio::time;
 use walkdir::WalkDir;
 use zip::result::ZipError;
-use zip::write::{FileOptions, SimpleFileOptions};
+use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
 
-use crate::string::format_bytes_to_string;
-use crate::BASE_BACKEND_URL;
+use crate::format_bytes_to_string;
+
+#[cfg(debug_assertions)]
+const SEND_BACKEND_URL: &str = "http://localhost:4000";
+
+#[cfg(not(debug_assertions))]
+const SEND_BACKEND_URL: &str = "https://eu1.backend.niku.app";
 
 #[derive(Error, Debug)]
 pub enum SendError {
@@ -55,6 +61,9 @@ pub enum SendError {
 
     #[error("Unable to walk the folder: {0}")]
     WalkError(#[from] walkdir::Error),
+
+    #[error("Unable to get the size of the terminal")]
+    UnableToGetTheSizeOfTheTerminal(),
 }
 
 /// Creates a new object entry for a file.
@@ -66,6 +75,8 @@ async unsafe fn create_file_object_entry(
     blobs_client: &MemClient,
     router: &Router,
 ) -> Result<ObjectEntry, SendError> {
+    println!("Packing file...");
+
     let blob = blobs_client
         .add_from_path(path.clone(), true, SetTagOption::Auto, WrapOption::NoWrap)
         .await?
@@ -93,15 +104,20 @@ async unsafe fn create_file_object_entry(
 /// # Safety
 /// Doesn't check if the given path is for a folder.
 async unsafe fn create_folder_object_entry(
-    base_path: &PathBuf,
+    directory_to_compress_path: &PathBuf,
     blobs_client: &MemClient,
     router: &Router,
 ) -> Result<ObjectEntry, SendError> {
     let mut data = Vec::new();
-    let walkdir = WalkDir::new(base_path);
+    let directory_to_compress_subpaths: Vec<Result<walkdir::DirEntry, walkdir::Error>> =
+        WalkDir::new(directory_to_compress_path)
+            .into_iter()
+            .collect();
+
+    let directory_to_compress_subpaths_length = directory_to_compress_subpaths.len();
 
     #[allow(clippy::expect_used)]
-    let dir_name = base_path
+    let dir_name = directory_to_compress_path
         .clone()
         .file_name()
         .expect("The path is always for a real file")
@@ -109,7 +125,13 @@ async unsafe fn create_folder_object_entry(
         .ok_or(SendError::NotUnicodeFilename)?
         .to_string();
 
-    // The mess needed to zip the folder
+    println!("Compressing the folder, please wait...");
+
+    let terminal_width = term_size::dimensions()
+        .ok_or(SendError::UnableToGetTheSizeOfTheTerminal())?
+        .0;
+
+    // The mess needed to compress a folder
     {
         let blob_buffer = Cursor::new(&mut data);
         let mut zip = ZipWriter::new(blob_buffer);
@@ -119,17 +141,30 @@ async unsafe fn create_folder_object_entry(
 
         let mut buffer = Vec::new();
 
-        for entry in walkdir {
-            println!("{entry:?}");
-
+        // Done like this because `.enumerate()` have some issues.
+        let mut index = 0;
+        for entry in directory_to_compress_subpaths {
             let entry = entry?;
 
             let path = entry.path();
-            let name = path.strip_prefix(base_path)?;
+            let name = path.strip_prefix(directory_to_compress_path)?;
             let path_as_string = name
                 .to_str()
                 .ok_or(SendError::NotUnicodeFilename)?
                 .to_owned();
+
+            index += 1;
+
+            let status = format!(
+                "  Item {index}/{} ({})",
+                directory_to_compress_subpaths_length,
+                path.file_name()
+                    .ok_or(SendError::NotUnicodeFilename)?
+                    .to_str()
+                    .ok_or(SendError::NotUnicodeFilename)?
+            );
+
+            print!("{: <1$}\r", status, terminal_width);
 
             if name.as_os_str().is_empty() {
                 continue;
@@ -154,6 +189,7 @@ async unsafe fn create_folder_object_entry(
                 continue;
             }
 
+            println!();
             warn!("Skipping file: {path_as_string}, it's neither a plain file or a directory!");
         }
 
@@ -161,6 +197,9 @@ async unsafe fn create_folder_object_entry(
     }
 
     let blob = blobs_client.add_bytes(data).await?;
+
+    println!();
+    println!();
 
     Ok(ObjectEntry {
         node_address: router.endpoint().node_addr().await?,
@@ -195,7 +234,7 @@ pub(crate) async fn send(
     debug!("Uploading object: {object:?}");
 
     let registration_data = client
-        .put(format!("{BASE_BACKEND_URL}/objects"))
+        .put(format!("{SEND_BACKEND_URL}/objects"))
         .json(&object)
         .send()
         .await
@@ -204,20 +243,25 @@ pub(crate) async fn send(
         .await
         .map_err(SendError::SendFileObjectFailed)?;
 
-    let object_id_dashed = registration_data.id.replace(" ", "-");
+    let object_id_with_whitespace = registration_data.id.replace("-", " ");
 
-    println!(
-        "📤 Sending {} ({})",
-        object.kind,
-        format_bytes_to_string(object.size)
-    );
+    match object.kind.clone() {
+        ObjectKind::File { name } | ObjectKind::Folder { name } => {
+            println!(
+                "📤 Sending the {} '{}' ({})",
+                object.kind,
+                name,
+                format_bytes_to_string(object.size)
+            );
+        }
+    }
     println!(
         "  Your ID is: '{}' ({})",
-        registration_data.id, object_id_dashed
+        object_id_with_whitespace, registration_data.id
     );
     println!();
     println!("📥 On the other device, please run:");
-    println!("  niku receive {}", object_id_dashed);
+    println!("  niku receive {}", registration_data.id);
     println!();
     println!("🌐 Or use one of the official GUI apps:");
     println!("  https://niku.app/download");
@@ -230,7 +274,7 @@ pub(crate) async fn send(
         interval.tick().await;
         client
             .post(format!(
-                "{BASE_BACKEND_URL}/objects/{}/keep-alive",
+                "{SEND_BACKEND_URL}/objects/{}/keep-alive",
                 registration_data.id
             ))
             .json(&ObjectKeepAliveRequest {

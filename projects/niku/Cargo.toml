@@ -17,6 +17,8 @@ reqwest = { workspace = true }
 zip = { workspace = true }
 walkdir = { workspace = true }
 text_io = "0.1.13"
+dirs = "6.0.0"
+term_size = "0.3.2"
 
 [lints]
 workspace = true
