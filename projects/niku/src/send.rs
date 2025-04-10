@@ -248,7 +248,7 @@ pub(crate) async fn send(
     match object.kind.clone() {
         ObjectKind::File { name } | ObjectKind::Folder { name } => {
             println!(
-                "📤 Sending the {} '{}' ({})",
+                "  Sending the {} '{}' ({})",
                 object.kind,
                 name,
                 format_bytes_to_string(object.size)
@@ -260,10 +260,10 @@ pub(crate) async fn send(
         object_id_with_whitespace, registration_data.id
     );
     println!();
-    println!("📥 On the other device, please run:");
+    println!("  On the other device, please run:");
     println!("  niku receive {}", registration_data.id);
     println!();
-    println!("🌐 Or use one of the official GUI apps:");
+    println!("  Or use one of the official GUI apps:");
     println!("  https://niku.app/download");
 
     let mut interval = time::interval(Duration::from_secs(1));

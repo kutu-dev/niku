@@ -27,7 +27,7 @@ fn create_command() -> Command {
                 .arg(arg!(<ID> "The ID of the file to be downloaded"))
                 .arg_required_else_help(true)
                 .arg(
-                    arg!(-o --output <PATH> "Set a custom path and filename to the file to be downloaded")
+                    arg!(-o --output <OPATH> "Set a custom path and filename to the file to be downloaded")
                 ),
         )
 }
@@ -84,6 +84,7 @@ pub async fn run() -> Result<(), RunError> {
                     .expect("This is a required argument"),
                 client.clone(),
                 blobs_client,
+                sub_matches.get_one::<String>("output"),
             )
             .await?
         }

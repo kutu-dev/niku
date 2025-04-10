@@ -32,6 +32,7 @@ pub(crate) async fn receive(
     id: &str,
     client: Client,
     blobs_client: &MemClient,
+    custom_path: Option<&String>,
 ) -> Result<(), ReceiveError> {
     let object_entry = client
         .get(format!("http://localhost:4000/objects/{id}"))
@@ -51,7 +52,7 @@ pub(crate) async fn receive(
     };
 
     print!(
-        "📥 Download {} '{object_name}' ({})? (Y/n): ",
+        "  Download {} '{object_name}' ({})? (Y/n): ",
         object_entry.kind,
         format_bytes_to_string(object_entry.size)
     );
@@ -70,17 +71,22 @@ pub(crate) async fn receive(
         .finish()
         .await?;
 
-    let mut final_object_path =
-        env::current_dir().map_err(ReceiveError::CurrentWorkingDirectoryInvalid)?;
+    let final_object_path = if let Some(path) = custom_path {
+        PathBuf::from(path)
+    } else {
+        let mut path = env::current_dir().map_err(ReceiveError::CurrentWorkingDirectoryInvalid)?;
 
-    final_object_path.push(object_name.clone());
+        path.push(object_name.clone());
+
+        path
+    };
 
     match object_entry.kind {
         ObjectKind::File { name: _ } => {
             blobs_client
                 .export(
                     object_entry.file_hash,
-                    final_object_path,
+                    final_object_path.clone(),
                     ExportFormat::Blob,
                     ExportMode::Copy,
                 )
@@ -116,12 +122,15 @@ pub(crate) async fn receive(
                 let mut file = archive
                     .by_index(i)
                     .expect("The file should always have an index");
+
                 let outpath = match file.enclosed_name() {
                     Some(path) => path,
                     None => continue,
                 };
 
-                let outpath = Path::new(&object_name).join(outpath);
+                let outpath = Path::new(&final_object_path)
+                    .join(&object_name)
+                    .join(outpath);
 
                 if file.is_dir() {
                     println!("File {} extracted to \"{}\"", i, outpath.display());
