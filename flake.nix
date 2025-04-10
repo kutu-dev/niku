@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 # SPDX-License-Identifier: MPL-2.0
+
 {
   description = "Flake for the NIKU project.";
 
@@ -54,10 +55,6 @@
         taplo
         shfmt
         nodePackages.prettier
-
-        # TODO: Temporal should be removed
-        pkg-config
-        openssl
 
         (lib.hiPrio rust-bin.nightly."2025-04-10".rustfmt)
 

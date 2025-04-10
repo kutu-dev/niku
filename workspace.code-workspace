@@ -2,19 +2,19 @@
   "folders": [
     {
       "name": "Root",
-      "path": ".",
+      "path": "."
     },
     {
       "name": "Niku",
-      "path": "./projects/niku",
+      "path": "./projects/niku"
     },
     {
       "name": "Niku Core",
-      "path": "./projects/niku_core",
+      "path": "./projects/niku_core"
     },
     {
       "name": "Niku Backend",
-      "path": "./projects/niku_backend",
+      "path": "./projects/niku_backend"
     },
     {
       "name": "Scripts",
@@ -25,18 +25,21 @@
     "rust-analyzer.checkOnSave.command": "clippy",
     "editor.formatOnSave": true,
     "search.exclude": {
-      "**/target/": true,
+      "**/target/": true
     },
     "files.exclude": {
       "**/target/": true,
       "projects/": true,
-      "scripts/": true,
+      "scripts/": true
     },
     "cSpell.words": [
       "ALPN",
+      "Blanco",
+      "Dobón",
       "formatcp",
       "iroh",
       "KIBIBYTE",
+      "Kutu",
       "niku",
       "NKBE",
       "pkgs",
@@ -44,8 +47,9 @@
       "serde",
       "taplo",
       "thiserror",
+      "utoipa",
       "walkdir"
-    ],
+    ]
   },
   "extensions": {
     "recommendations": [
@@ -56,7 +60,7 @@
       "bbenoist.Nix",
       // Rust
       "rust-lang.rust-analyzer",
-      "dustypomerleau.rust-syntax",
-    ],
-  },
+      "dustypomerleau.rust-syntax"
+    ]
+  }
 }

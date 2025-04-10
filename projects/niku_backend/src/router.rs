@@ -1,28 +1,41 @@
-// Copyright 2025 Google LLC
-// SPDX-License-Identifier: MPL
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
+
 
 use std::sync::Arc;
 use std::time::Duration;
 
 use axum::extract::{Json, MatchedPath, Path, Request, State};
-use axum::routing::{get, post, put};
 use axum::Router;
-use niku_core::{ObjectEntry, ObjectKeepAliveRequest, RegisteredObjectData};
+use niku_core::backend::{ObjectKeepAliveRequest, RegisteredObjectData};
+use niku_core::object::ObjectEntry;
 use rand::seq::IndexedRandom;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tokio::time;
 use tower_http::trace::TraceLayer;
 use tracing::{info, trace};
+use utoipa::openapi::{Info, License};
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
+use utoipa_swagger_ui::SwaggerUi;
 use uuid::Uuid;
 
-use crate::{KeepAliveEntry, ServerError, SharedData, ADJECTIVES, NOUNS, VERBS};
+use crate::errors::ServerError;
+use crate::{KeepAliveEntry, SharedData, ADJECTIVES, NOUNS, VERBS};
 
 pub(crate) fn create_router(state: Arc<Mutex<SharedData>>) -> Router {
-    Router::new()
-        .route("/objects", put(put_objects))
-        .route("/objects/{id}", get(get_objects_id))
-        .route("/objects/{id}/keep-alive", post(post_objects_id_keep_alive))
+    // Router::new()
+    //     .route("/objects", put(put_objects))
+    //     .route("/objects/{id}", get(get_objects_id))
+    //     .route("/objects/{id}/keep-alive", post(post_objects_id_keep_alive))
+
+    let (router, mut spec) = OpenApiRouter::new()
+        .routes(routes!(put_objects))
         .with_state(state)
         .layer(TraceLayer::new_for_http().make_span_with(|req: &Request| {
             let method = req.method();
@@ -35,6 +48,29 @@ pub(crate) fn create_router(state: Arc<Mutex<SharedData>>) -> Router {
 
             tracing::debug_span!("request", %method, %uri, matched_path)
         }))
+        .split_for_parts();
+
+    if !cfg!(debug_assertions) {
+        return router;
+    }
+
+    info!("Debug mode enabled, spinning up OpenAPI documentation at '/swagger'");
+
+    spec.info = Info::builder()
+        .title("NIKU Backend API")
+        .description(Some(
+            "The server used to interchange between peers their IDs given a human friendly name.",
+        ))
+        .version("1.0.0")
+        .license(Some(
+            License::builder()
+                .name("Mozilla Public License 2.0")
+                .identifier(Some("MPL-2.0"))
+                .build(),
+        ))
+        .build();
+
+    router.merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", spec.clone()))
 }
 
 fn create_object_delete_task(
@@ -72,28 +108,34 @@ fn create_object_delete_task(
     })
 }
 
-/// Get a random value from a `&[&str]`
-///
-/// # Safety
-/// The given slice must not be empty.
-unsafe fn get_random_value_from_string_vec(values: &[String]) -> String {
-    #[allow(clippy::expect_used)]
-    values
-        .choose(&mut rand::rng())
-        .expect("The vector should never be empty")
-        .to_string()
+trait StringSliceExt {
+    /// Get a random value from a `&[&str]`
+    ///
+    /// # Safety
+    /// The given slice must not be empty.
+    unsafe fn get_random(&self) -> String;
+}
+
+impl StringSliceExt for [String] {
+    unsafe fn get_random(&self) -> String {
+        #[allow(clippy::expect_used)]
+        self.choose(&mut rand::rng())
+            .expect("The vector should never be empty")
+            .to_string()
+    }
 }
 
 fn get_random_word(prefix: &str) -> String {
     unsafe {
-        let adjective = get_random_value_from_string_vec(&ADJECTIVES);
-        let noun = get_random_value_from_string_vec(&NOUNS);
-        let verb = get_random_value_from_string_vec(&VERBS);
+        let adjective = ADJECTIVES.get_random();
+        let noun = NOUNS.get_random();
+        let verb = VERBS.get_random();
 
-        format!("{prefix} {adjective} {noun} {verb}")
+        format!("{prefix}-{adjective}-{noun}-{verb}")
     }
 }
 
+#[utoipa::path(put, path = "/objects", responses((status = OK, body = RegisteredObjectData)))]
 async fn put_objects(
     State(locked_state): State<Arc<Mutex<SharedData>>>,
     Json(upload_ticket): Json<ObjectEntry>,

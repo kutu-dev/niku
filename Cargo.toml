@@ -15,7 +15,6 @@ thiserror = "2.0.12"
 log = "0.4.26"
 env_logger = "0.11.7"
 serde = { version = "1.0.219", features = ["derive"] }
-reqwest = { version = "0.12.14", features = ["json"] }
 rand = "0.9.0"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
@@ -27,6 +26,25 @@ walkdir = "2.5.0"
 text_io = "0.1.13"
 dirs = "6.0.0"
 term_size = "0.3.2"
+utoipa = "5.3.1"
+utoipa-axum = "0.2.0"
+utoipa-swagger-ui = { version = "9.0.1", features = ["axum"] }
+
+[workspace.dependencies.axum-server]
+version = "0.7.2"
+
+default-features = false
+features = ["tls-rustls"]
+
+[workspace.dependencies.reqwest]
+version = "0.12.14"
+
+default-features = false
+features = ["rustls-tls", "json"]
+
+[profile.release]
+strip = true
+lto = true
 
 [workspace.lints.rust]
 "missing_docs" = "warn"

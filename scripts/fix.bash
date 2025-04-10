@@ -33,4 +33,5 @@ info Formatting Rust code
 cargo fmt
 
 info Adding license headers
-addlicense -s -l MPL ./*
+# TODO:
+# addlicense -s -l "MPL-2.0" -c 'Jorge "Kutu" Dobón Blanco' ./**/*

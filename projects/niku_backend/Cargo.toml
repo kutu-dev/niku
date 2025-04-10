@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 niku_core = { version = "0.1.0", path = "../niku_core" }
 axum = { workspace = true }
+axum-server = { workspace = true }
 tokio = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
@@ -17,10 +18,9 @@ tower-http = { workspace = true }
 serde = { workspace = true }
 const_format = { workspace = true }
 serde_json = { workspace = true }
+utoipa = { workspace = true }
+utoipa-axum = { workspace = true }
+utoipa-swagger-ui = { workspace = true }
 
 [lints]
 workspace = true
-
-[profile.release]
-strip = true
-lto = true

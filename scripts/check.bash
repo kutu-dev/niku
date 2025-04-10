@@ -35,3 +35,7 @@ cargo fix --allow-dirty --check
 
 info Checking formatting in Rust code
 cargo +nightly fmt --allow-dirty --check
+
+info Checking license headers
+# TODO:
+#addlicense -s -l "MPL-2.0" -c 'Jorge "Kutu" Dobón Blanco' -check ./**/*
