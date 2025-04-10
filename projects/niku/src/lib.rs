@@ -1,3 +1,6 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 //! Main NIKU command line app internal library.
 
 mod receive;

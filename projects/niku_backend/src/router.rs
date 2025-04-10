@@ -1,3 +1,6 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 use std::sync::Arc;
 use std::time::Duration;
 

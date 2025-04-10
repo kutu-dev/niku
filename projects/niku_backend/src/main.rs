@@ -1,3 +1,6 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 //! Backend in charge of making discovery possible on NIKU.
 
 use tracing::error;

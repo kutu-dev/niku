@@ -1,55 +1,62 @@
 {
-	"folders": [
-		{
-			"name": "Root",
-			"path": ".",
-		},
-		{
-			"name": "Niku",
-			"path": "./projects/niku",
-		},
-		{
-			"name": "Niku Core",
-			"path": "./projects/niku_core",
-		},
-		{
-			"name": "Niku Backend",
-			"path": "./projects/niku_backend",
-		},
-	],
-	"settings": {
-		"rust-analyzer.checkOnSave.command": "clippy",
-		"editor.formatOnSave": true,
-		"search.exclude": {
-			"**/target/": true
-		},
-		"files.exclude": {
-			"**/target/": true,
-			"projects/": true
-		},
-		"cSpell.words": [
-			"ALPN",
-			"formatcp",
-			"iroh",
-			"KIBIBYTE",
-			"niku",
-			"NKBE",
-			"reqwest",
-			"serde",
-			"thiserror",
-			"walkdir"
-		],
-	},
-	"extensions": {
-		"recommendations": [
-			// General
-			"streetsidesoftware.code-spell-checker",
-			"me-dutour-mathieu.vscode-github-actions",
-			// Nix
-			"bbenoist.Nix",
-			// Rust
-			"rust-lang.rust-analyzer",
-			"dustypomerleau.rust-syntax",
-		],
-	},
+  "folders": [
+    {
+      "name": "Root",
+      "path": ".",
+    },
+    {
+      "name": "Niku",
+      "path": "./projects/niku",
+    },
+    {
+      "name": "Niku Core",
+      "path": "./projects/niku_core",
+    },
+    {
+      "name": "Niku Backend",
+      "path": "./projects/niku_backend",
+    },
+    {
+      "name": "Scripts",
+      "path": "./scripts"
+    }
+  ],
+  "settings": {
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "editor.formatOnSave": true,
+    "search.exclude": {
+      "**/target/": true,
+    },
+    "files.exclude": {
+      "**/target/": true,
+      "projects/": true,
+      "scripts/": true,
+    },
+    "cSpell.words": [
+      "ALPN",
+      "formatcp",
+      "iroh",
+      "KIBIBYTE",
+      "niku",
+      "NKBE",
+      "pkgs",
+      "reqwest",
+      "serde",
+      "taplo",
+      "thiserror",
+      "walkdir"
+    ],
+  },
+  "extensions": {
+    "recommendations": [
+      // General
+      "streetsidesoftware.code-spell-checker",
+      "me-dutour-mathieu.vscode-github-actions",
+      // Nix
+      "bbenoist.Nix",
+      // Rust
+      "rust-lang.rust-analyzer",
+      "dustypomerleau.rust-syntax",
+    ],
+  },
 }

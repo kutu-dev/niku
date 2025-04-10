@@ -1,3 +1,6 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 //! Backend in charge of making discovery possible on NIKU.
 
 mod router;
@@ -30,9 +33,9 @@ const OBJECT_LIFETIME_SECONDS: u64 = 5;
 #[cfg(not(debug_assertions))]
 const OBJECT_LIFETIME_SECONDS: u64 = 5 * 60;
 
-const NOUNS_JSON: &str = include_str!("nouns.json");
-const ADJECTIVES_JSON: &str = include_str!("adjectives.json");
-const VERBS_JSON: &str = include_str!("verbs.json");
+const NOUNS_JSON: &str = include_str!("data/nouns.json");
+const ADJECTIVES_JSON: &str = include_str!("data/adjectives.json");
+const VERBS_JSON: &str = include_str!("data/verbs.json");
 
 static NOUNS: LazyLock<Vec<String>> = LazyLock::new(|| {
     #[allow(clippy::expect_used)]

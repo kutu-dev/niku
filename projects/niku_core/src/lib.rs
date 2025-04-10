@@ -1,3 +1,6 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 //! Shared code for all the crates of the NIKU project.
 
 use std::fmt::{Debug, Display};

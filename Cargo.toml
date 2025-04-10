@@ -24,6 +24,9 @@ const_format = "0.2.34"
 serde_json = "1.0.140"
 zip = "2.2.3"
 walkdir = "2.5.0"
+text_io = "0.1.13"
+dirs = "6.0.0"
+term_size = "0.3.2"
 
 [workspace.lints.rust]
 "missing_docs" = "warn"

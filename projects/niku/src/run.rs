@@ -1,6 +1,6 @@
-use crate::receive::{self, ReceiveError};
-use crate::send::{self, SendError};
-use crate::VERSION;
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 use clap::{arg, Command};
 use iroh::protocol::Router;
 use iroh::Endpoint;
@@ -8,6 +8,10 @@ use iroh_blobs::net_protocol::Blobs;
 use log::error;
 use reqwest::Client;
 use thiserror::Error;
+
+use crate::receive::{self, ReceiveError};
+use crate::send::{self, SendError};
+use crate::VERSION;
 
 fn create_command() -> Command {
     Command::new("niku")

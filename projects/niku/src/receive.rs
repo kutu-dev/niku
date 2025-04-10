@@ -1,3 +1,6 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 use std::env::{self};
 use std::io;
 use std::path::{Path, PathBuf};

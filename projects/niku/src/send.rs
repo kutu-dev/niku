@@ -1,7 +1,9 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
-use std::io::stdout;
 use std::io::Cursor;
 use std::path::{PathBuf, StripPrefixError};
 use std::time::Duration;
