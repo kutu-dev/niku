@@ -4,11 +4,10 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-
-
 //! Backend in charge of making discovery possible on NIKU.
 
 mod errors;
+mod extensions;
 mod router;
 
 use std::collections::HashMap;
@@ -23,12 +22,15 @@ use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tracing::{error, info};
 
-const ENV_VARS_PREFIX: &str = "NIKU_BACKEND_";
+const ENV_VARS_PREFIX: &str = "APP_NIKU_BACKEND_";
 
 const OBJECT_ID_PREFIX_ENV_VAR_NAME: &str = formatcp!("{ENV_VARS_PREFIX}OBJECT_ID_PREFIX");
 const DEFAULT_OBJECT_ID_PREFIX: &str = "test";
 
-const SERVE_ADDRESS: &str = "0.0.0.0:4000";
+const PORT_ENV_VAR_NAME: &str = formatcp!("{ENV_VARS_PREFIX}PORT");
+const DEFAULT_PORT: &str = "4000";
+
+const SERVE_ADDRESS: &str = "0.0.0.0";
 
 #[cfg(debug_assertions)]
 const OBJECT_LIFETIME_SECONDS: u64 = 5;
@@ -88,6 +90,9 @@ pub async fn run() -> Result<(), RunError> {
     let object_id_prefix =
         env::var(OBJECT_ID_PREFIX_ENV_VAR_NAME).unwrap_or(String::from(DEFAULT_OBJECT_ID_PREFIX));
 
+    let port = env::var(PORT_ENV_VAR_NAME).unwrap_or(String::from(DEFAULT_PORT));
+    let address = format!("{SERVE_ADDRESS}:{port}");
+
     info!("Starting NIKU backend server...");
 
     if cfg!(debug_assertions) {
@@ -96,12 +101,12 @@ pub async fn run() -> Result<(), RunError> {
 
     info!("Object lifetime: {OBJECT_LIFETIME_SECONDS}s");
     info!("Object ID prefix: {object_id_prefix}");
-    info!("Serving at http://{SERVE_ADDRESS}/");
+    info!("Serving at http://{address}/");
 
     let state = Arc::new(Mutex::new(SharedData::new(object_id_prefix)));
     let router = router::create_router(state);
 
-    let listener = tokio::net::TcpListener::bind(SERVE_ADDRESS)
+    let listener = tokio::net::TcpListener::bind(address)
         .await
         .map_err(RunError::BingTcpListenerFailed)?;
 

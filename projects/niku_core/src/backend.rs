@@ -4,8 +4,6 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-
-
 //! Shared structs use to communicate with the backend.
 
 use std::fmt::Debug;
@@ -23,14 +21,14 @@ pub struct RegisteredObjectData {
     pub keep_alive_key: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 /// Request that can be send to the backend server the avoid it deleting the object entry.
 pub struct ObjectKeepAliveRequest {
     /// The private UUIDv4 that has been returned by [RegisteredObjectData] used to identify and authenticate the object refresh.
     pub keep_alive_key: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 /// Data that is returned when the server has an error.
 pub struct ErrorResponse {
     /// The associated code with the raised error.

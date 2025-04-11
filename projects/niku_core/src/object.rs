@@ -4,17 +4,19 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-
-
 //! Structs and enums related to the concept of an object.
 
-use std::fmt::{Debug, Display};
+use std::{
+    borrow::Cow,
+    fmt::{Debug, Display},
+};
 
 use iroh::NodeAddr;
 use iroh_blobs::Hash;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 /// The kind of an object
 pub enum ObjectKind {
     /// The object is a file
@@ -42,13 +44,63 @@ impl Display for ObjectKind {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+/// Wrapper around the [NodeAddr] used to implement external traits.
+pub struct NodeAddrWrapper(NodeAddr);
+
+impl utoipa::ToSchema for NodeAddrWrapper {
+    fn name() -> Cow<'static, str> {
+        Cow::Borrowed("NodeAddr")
+    }
+}
+
+impl utoipa::PartialSchema for NodeAddrWrapper {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        const WARNING_TEXT: &str = "DOCUMENTATION ONLY - iroh NodeAddr type";
+
+        utoipa::openapi::ObjectBuilder::new()
+            .property(
+                WARNING_TEXT,
+                utoipa::openapi::ObjectBuilder::new()
+                    .schema_type(utoipa::openapi::schema::Type::String),
+            )
+            .required(WARNING_TEXT)
+            .into()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+/// Wrapper around the [Hash] used to implement external traits.
+pub struct HashWrapper(Hash);
+
+impl utoipa::ToSchema for HashWrapper {
+    fn name() -> Cow<'static, str> {
+        Cow::Borrowed("Hash")
+    }
+}
+
+impl utoipa::PartialSchema for HashWrapper {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        const WARNING_TEXT: &str = "DOCUMENTATION ONLY - iroh Hash type";
+
+        utoipa::openapi::ObjectBuilder::new()
+            .property(
+                WARNING_TEXT,
+                utoipa::openapi::ObjectBuilder::new()
+                    .schema_type(utoipa::openapi::schema::Type::String),
+            )
+            .required(WARNING_TEXT)
+            .into()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 /// Entry that holds the relevant data of a object available for downloading.
 pub struct ObjectEntry {
     /// The [iroh] address of the node that is hosting the file.
-    pub node_address: NodeAddr,
+    pub node_address: NodeAddrWrapper,
 
     /// The file hash used by [iroh_blobs] protocol to access the file.
-    pub file_hash: Hash,
+    pub file_hash: HashWrapper,
 
     /// The kind of object to be download.
     pub kind: ObjectKind,

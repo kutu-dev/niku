@@ -4,8 +4,6 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-
-
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;

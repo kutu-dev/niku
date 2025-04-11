@@ -4,15 +4,15 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-
+mod get_objects_id;
+mod post_objects_id_keep_alive;
+mod put_objects;
 
 use std::sync::Arc;
 use std::time::Duration;
 
-use axum::extract::{Json, MatchedPath, Path, Request, State};
+use axum::extract::{MatchedPath, Request};
 use axum::Router;
-use niku_core::backend::{ObjectKeepAliveRequest, RegisteredObjectData};
-use niku_core::object::ObjectEntry;
 use rand::seq::IndexedRandom;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
@@ -23,19 +23,20 @@ use utoipa::openapi::{Info, License};
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
 use utoipa_swagger_ui::SwaggerUi;
-use uuid::Uuid;
 
-use crate::errors::ServerError;
-use crate::{KeepAliveEntry, SharedData, ADJECTIVES, NOUNS, VERBS};
+use crate::SharedData;
+
+use crate::router::get_objects_id::*;
+use crate::router::post_objects_id_keep_alive::*;
+use crate::router::put_objects::*;
 
 pub(crate) fn create_router(state: Arc<Mutex<SharedData>>) -> Router {
-    // Router::new()
-    //     .route("/objects", put(put_objects))
-    //     .route("/objects/{id}", get(get_objects_id))
-    //     .route("/objects/{id}/keep-alive", post(post_objects_id_keep_alive))
-
     let (router, mut spec) = OpenApiRouter::new()
-        .routes(routes!(put_objects))
+        .routes(routes!(
+            put_objects,
+            get_objects_id,
+            post_objects_id_keep_alive
+        ))
         .with_state(state)
         .layer(TraceLayer::new_for_http().make_span_with(|req: &Request| {
             let method = req.method();
@@ -73,6 +74,7 @@ pub(crate) fn create_router(state: Arc<Mutex<SharedData>>) -> Router {
     router.merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", spec.clone()))
 }
 
+/// Creates the background task responsible of deleting the object at the end of its lifetime.
 fn create_object_delete_task(
     locked_state: Arc<Mutex<SharedData>>,
     id: &str,
@@ -106,116 +108,4 @@ fn create_object_delete_task(
         state.objects.remove(&object_id);
         state.keep_alive_entries.remove(&object_keep_alive_key);
     })
-}
-
-trait StringSliceExt {
-    /// Get a random value from a `&[&str]`
-    ///
-    /// # Safety
-    /// The given slice must not be empty.
-    unsafe fn get_random(&self) -> String;
-}
-
-impl StringSliceExt for [String] {
-    unsafe fn get_random(&self) -> String {
-        #[allow(clippy::expect_used)]
-        self.choose(&mut rand::rng())
-            .expect("The vector should never be empty")
-            .to_string()
-    }
-}
-
-fn get_random_word(prefix: &str) -> String {
-    unsafe {
-        let adjective = ADJECTIVES.get_random();
-        let noun = NOUNS.get_random();
-        let verb = VERBS.get_random();
-
-        format!("{prefix}-{adjective}-{noun}-{verb}")
-    }
-}
-
-#[utoipa::path(put, path = "/objects", responses((status = OK, body = RegisteredObjectData)))]
-async fn put_objects(
-    State(locked_state): State<Arc<Mutex<SharedData>>>,
-    Json(upload_ticket): Json<ObjectEntry>,
-) -> Json<RegisteredObjectData> {
-    let state = &mut locked_state.lock().await;
-
-    // Iterate over until a unique ID is found, given the number of combinations
-    // this should not happen more than one or two times at most
-    let id = loop {
-        let new_id = get_random_word(&state.object_id_prefix);
-
-        if !state.objects.contains_key(&new_id) {
-            break new_id;
-        }
-    };
-
-    let keep_alive_key = Uuid::new_v4().to_string();
-
-    state.objects.insert(id.clone(), upload_ticket);
-
-    state.keep_alive_entries.insert(
-        keep_alive_key.clone(),
-        KeepAliveEntry {
-            ticket_id: id.clone(),
-            delete_task: create_object_delete_task(locked_state.clone(), &id, &keep_alive_key),
-        },
-    );
-
-    if cfg!(debug_assertions) {
-        info!(%id, %keep_alive_key, "Created new object");
-    }
-
-    Json(RegisteredObjectData { id, keep_alive_key })
-}
-
-async fn get_objects_id(
-    State(state): State<Arc<Mutex<SharedData>>>,
-    Path(id): Path<String>,
-) -> Result<Json<ObjectEntry>, ServerError> {
-    let objects = &mut state.lock().await.objects;
-    let entry = objects.get(&id).ok_or(ServerError::UnknownObject)?.clone();
-
-    if cfg!(debug_assertions) {
-        info!(?entry, "Requested object entry");
-    }
-
-    Ok(Json(entry))
-}
-
-async fn post_objects_id_keep_alive(
-    State(locked_state): State<Arc<Mutex<SharedData>>>,
-    Path(id): Path<String>,
-    Json(keep_alive_request): Json<ObjectKeepAliveRequest>,
-) -> Result<(), ServerError> {
-    let mut state = locked_state.lock().await;
-
-    let keep_alive_entry = state
-        .keep_alive_entries
-        .get(&keep_alive_request.keep_alive_key)
-        .ok_or(ServerError::UnknownKeepAliveKey)?;
-
-    keep_alive_entry.delete_task.abort();
-    let ticket_id = keep_alive_entry.ticket_id.clone();
-
-    // Drop the reference
-    let _ = keep_alive_entry;
-
-    let delete_task = create_object_delete_task(
-        locked_state.clone(),
-        &id,
-        &keep_alive_request.keep_alive_key,
-    );
-
-    state.keep_alive_entries.insert(
-        keep_alive_request.keep_alive_key,
-        KeepAliveEntry {
-            ticket_id,
-            delete_task,
-        },
-    );
-
-    Ok(())
 }

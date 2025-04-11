@@ -4,8 +4,6 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-
-
 //! Backend in charge of making discovery possible on NIKU.
 
 use tracing::error;
