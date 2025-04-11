@@ -5,12 +5,12 @@
       "path": "."
     },
     {
-      "name": "Niku",
+      "name": "Niku Lib",
       "path": "./projects/niku"
     },
     {
-      "name": "Niku Core",
-      "path": "./projects/niku_core"
+      "name": "Niku Cli",
+      "path": "./projects/niku_cli"
     },
     {
       "name": "Niku Backend",

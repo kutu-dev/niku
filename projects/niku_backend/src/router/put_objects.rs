@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use axum::extract::{Json, State};
-use niku_core::backend::RegisteredObjectData;
-use niku_core::object::ObjectEntry;
+use niku::backend::RegisteredObjectData;
+use niku::object::ObjectEntry;
 use tokio::sync::Mutex;
 use tracing::info;
 use uuid::Uuid;

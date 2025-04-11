@@ -7,7 +7,7 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use niku_core::backend::ErrorResponse;
+use niku::backend::ErrorResponse;
 
 pub(crate) enum ServerError {
     UnknownObject,

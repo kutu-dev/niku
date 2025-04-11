@@ -4,19 +4,14 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-//! Main NIKU command line app internal library.
+//! The NIKU client library.
 
-mod receive;
-mod run;
-mod send;
-
-pub use run::run;
-
-const VERSION: &str = "0.0.1";
+pub mod backend;
+pub mod object;
 
 pub(crate) fn get_backend_url(prefix: &str) -> Option<String> {
     let url = match prefix {
-        "test" => Some("http://localhost:4000"),
+        "test" => Some("http://localhost:8080"),
         "the" => Some("https://eu1.backend.niku.app"),
         _ => None,
     };

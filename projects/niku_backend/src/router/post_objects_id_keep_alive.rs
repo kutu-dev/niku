@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use axum::extract::{Json, Path, State};
-use niku_core::backend::{ErrorResponse, ObjectKeepAliveRequest};
-use niku_core::object::ObjectEntry;
+use niku::backend::{ErrorResponse, ObjectKeepAliveRequest};
+use niku::object::ObjectEntry;
 use tokio::sync::Mutex;
 
 use crate::errors::ServerError;

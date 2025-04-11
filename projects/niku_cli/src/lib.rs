@@ -1,0 +1,73 @@
+// Copyright 2025 Google LLC
+// SPDX-License-Identifier: MPL
+
+//! Main internal library of the NIKU command line app.
+
+use clap::{arg, Command};
+use iroh::protocol::Router;
+use iroh::Endpoint;
+use iroh_blobs::net_protocol::Blobs;
+use log::error;
+use reqwest::Client;
+use thiserror::Error;
+
+fn create_command() -> Command {
+    Command::new("niku")
+        .about("NIKU: Send files fast and privately with the power of P2P technologies")
+        .version(env!("CARGO_PKG_VERSION"))
+        .subcommand_required(true)
+        .arg_required_else_help(true)
+        .subcommand(
+            Command::new("send")
+                .about("Send a file")
+                .arg(arg!(<PATH> "The path of the file to be sent"))
+                .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("receive")
+                .about("Send a file")
+                .arg(arg!(<ID> "The ID of the file to be downloaded"))
+                .arg_required_else_help(true)
+                .arg(
+                    arg!(-o --output <OPATH> "Set a custom path and filename to the file to be downloaded")
+                ),
+        )
+}
+
+#[derive(Error, Debug)]
+/// Errors that may happen when running the app.
+pub enum RunError {
+    /// An error from Iroh.
+    #[error("An error from Iroh has been raised: {0}")]
+    IrohError(#[from] anyhow::Error),
+}
+
+/// Run the app.
+pub async fn run() -> Result<(), RunError> {
+    let client = Client::new();
+    let endpoint = Endpoint::builder().bind().await?;
+
+    let blobs_protocol = Blobs::memory().build(&endpoint);
+    let blobs_client = blobs_protocol.client();
+
+    let router = Router::builder(endpoint)
+        .accept(iroh_blobs::ALPN, blobs_protocol.clone())
+        .spawn()
+        .await?;
+
+    match create_command().get_matches().subcommand() {
+        Some(("send", sub_matches)) => {
+            println!("SEND")
+        }
+
+        Some(("receive", sub_matches)) => {
+            println!("RECEIVE")
+        }
+
+        _ => unreachable!(),
+    };
+
+    router.shutdown().await?;
+
+    Ok(())
+}

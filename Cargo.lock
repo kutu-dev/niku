@@ -1161,6 +1161,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_filter"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "186e05a59d4c50738528153b83b0b0194d3a29507dfec16eccd4b342903397d0"
+dependencies = [
+ "log",
+ "regex",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.11.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13c863f0904021b108aa8b2f55046443e6b1ebde8fd4a15c399893aae4fa069f"
+dependencies = [
+ "anstream",
+ "anstyle",
+ "env_filter",
+ "jiff",
+ "log",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2365,6 +2388,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
+name = "jiff"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f33145a5cbea837164362c7bd596106eb7c5198f97d1ba6f6ebb3223952e488"
+dependencies = [
+ "jiff-static",
+ "log",
+ "portable-atomic",
+ "portable-atomic-util",
+ "serde",
+]
+
+[[package]]
+name = "jiff-static"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43ce13c40ec6956157a3635d97a1ee2df323b263f09ea14165131289cb0f5c19"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
+]
+
+[[package]]
 name = "jni"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2804,21 +2851,10 @@ dependencies = [
 name = "niku"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "clap",
- "dirs",
  "iroh",
- "iroh-base",
  "iroh-blobs",
- "log",
- "niku_core",
- "reqwest",
- "term_size",
- "text_io",
- "thiserror 2.0.12",
- "tokio",
- "walkdir",
- "zip",
+ "serde",
+ "utoipa",
 ]
 
 [[package]]
@@ -2829,7 +2865,7 @@ dependencies = [
  "axum-server",
  "const_format",
  "log",
- "niku_core",
+ "niku",
  "rand 0.9.0",
  "serde",
  "serde_json",
@@ -2845,13 +2881,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "niku_core"
+name = "niku_cli"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "clap",
+ "dirs",
+ "env_logger",
  "iroh",
+ "iroh-base",
  "iroh-blobs",
- "serde",
- "utoipa",
+ "log",
+ "niku",
+ "reqwest",
+ "term_size",
+ "text_io",
+ "thiserror 2.0.12",
+ "tokio",
+ "walkdir",
+ "zip",
 ]
 
 [[package]]
@@ -3344,6 +3392,15 @@ name = "portable-atomic"
 version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "350e9b48cbc6b0e028b0473b114454c6316e57336ee184ceab6e53f72c178b3e"
+
+[[package]]
+name = "portable-atomic-util"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8a2f0d8d040d7848a709caf78912debcc3f33ee4b3cac47d73d1e1069e83507"
+dependencies = [
+ "portable-atomic",
+]
 
 [[package]]
 name = "portmapper"

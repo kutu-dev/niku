@@ -4,21 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-niku_core = { version = "0.1.0", path = "../niku_core" }
-anyhow = { workspace = true }
-clap = { workspace = true }
-iroh = { workspace = true }
-iroh-base = { workspace = true }
-iroh-blobs = { workspace = true }
-thiserror = { workspace = true }
-tokio = { workspace = true }
-log = { workspace = true }
-reqwest = { workspace = true }
-zip = { workspace = true }
-walkdir = { workspace = true }
-text_io = { workspace = true }
-dirs = { workspace = true }
-term_size = { workspace = true }
+serde.workspace = true
+iroh.workspace = true
+iroh-blobs.workspace = true
+utoipa.workspace = true
 
 [lints]
 workspace = true

@@ -16,7 +16,7 @@ use std::{env, io};
 
 use const_format::formatcp;
 use log::warn;
-use niku_core::object::ObjectEntry;
+use niku::object::ObjectEntry;
 use thiserror::Error;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
