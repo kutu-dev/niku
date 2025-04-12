@@ -19,9 +19,9 @@
   };
 
   outputs = {
-    self,
     nixpkgs,
     rust-overlay,
+    ...
   }: let
     allSystems = [
       "x86_64-linux"
@@ -53,6 +53,7 @@
         shellcheck
         taplo
         shfmt
+        nixd
         nodePackages.prettier
 
         (lib.hiPrio rust-bin.nightly."2025-04-10".rustfmt)

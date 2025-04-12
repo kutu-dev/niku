@@ -4,24 +4,28 @@
 
 - Retrieve
   - Implement
-    - First `retrieve_object_entry()` on `Peer`.
-    - Then download to Blobs store.
-    - Match if file or folder
-    - ...
-
-    - Custom output path
-      - `-o --output`
     - Ask for download
       - `-y --yes`
 
 - Send
+  - Change refresh time on debug and release
   - Ask mode
   - Downloaded times limit
 
-- Monorepo
+- Misc
+  - Make generic_wait use scopes.
+
+## Niku Backend
+- Timeout spammers
+
+## Monorepo
   - https://github.com/bnjbvr/cargo-machete
-  - License headers mess, disabled on check and fix
   - TODOs in scripts (broken things)
+    - License headers mess, disabled on check and fix
+  - Testing
+    - Add to CI/CD
+    - Unit
+    - E2E
 
 ### In the really distant future
 - Bulk subcommand for sending and retrieving

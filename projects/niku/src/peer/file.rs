@@ -1,7 +1,8 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use iroh_blobs::rpc::client::blobs::WrapOption;
+use iroh_blobs::store::{ExportFormat, ExportMode};
 use iroh_blobs::util::SetTagOption;
 
 use super::{Peer, PeerError};
@@ -35,8 +36,44 @@ impl Peer {
         Ok(ObjectEntry {
             node_address: NodeAddrWrapper(self.router.endpoint().node_addr().await?),
             file_hash: HashWrapper(blob.hash),
-            kind: ObjectKind::File { name: file_name },
+            kind: ObjectKind::File,
+            name: file_name,
             size: blob.size,
         })
+    }
+
+    /// Export a previously downloaded file object entry.
+    ///
+    /// # Safety
+    /// Doesn't check neither if the given object is for a file
+    /// or if the object has been downloaded beforehand into the Iroh store.
+    pub async unsafe fn export_file_object_entry(
+        &self,
+        object_entry: &ObjectEntry,
+        custom_output_path: &Option<PathBuf>,
+    ) -> Result<PathBuf, PeerError> {
+        let output_path = if let Some(custom_output_path) = custom_output_path {
+            custom_output_path.clone()
+        } else {
+            let mut cwd_path =
+                std::env::current_dir().map_err(PeerError::CurrentWorkingDirectoryInvalid)?;
+            cwd_path.push(&object_entry.name);
+
+            cwd_path
+        };
+
+        self.blobs
+            .client()
+            .export(
+                object_entry.file_hash.0,
+                output_path.to_owned(),
+                ExportFormat::Blob,
+                ExportMode::Copy,
+            )
+            .await?
+            .finish()
+            .await?;
+
+        Ok(output_path.to_owned())
     }
 }

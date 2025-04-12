@@ -22,6 +22,8 @@ pub(super) async fn post_objects_id_keep_alive(
     Path(id): Path<String>,
     Json(keep_alive_request): Json<ObjectKeepAliveRequest>,
 ) -> Result<(), ServerError> {
+    // TODO: This uses outdated terminology ("ticket") and (for some reason accepts any object ID as valid? happened once only).
+
     let mut state = locked_state.lock().await;
 
     let keep_alive_entry = state

@@ -12,6 +12,7 @@ use iroh::Endpoint;
 use iroh_blobs::net_protocol::Blobs;
 use log::debug;
 use reqwest::Method;
+use serde_json::error;
 use thiserror::Error;
 use zip::result::ZipError;
 
@@ -60,6 +61,15 @@ pub enum PeerError {
 
     #[error("Unable to strip the prefix of a path: {0}")]
     StripPrefixError(#[from] std::path::StripPrefixError),
+
+    #[error("The current working directory is not valid: {0}")]
+    CurrentWorkingDirectoryInvalid(#[source] io::Error),
+
+    #[error("Unable to open a file: {0}")]
+    UnableToOpenAFile(#[source] io::Error),
+
+    #[error("Unable to create a directory: {0}")]
+    UnableToCreateADirectory(#[source] io::Error),
 }
 
 impl Peer {
@@ -97,6 +107,11 @@ impl Peer {
             .await
     }
 
+    pub async fn retrieve_object_entry(&self, id: &str) -> Result<ObjectEntry, PeerError> {
+        self.request_expect_json(Method::GET, &format!("objects/{id}"), None::<&()>)
+            .await
+    }
+
     /// Keep alive the given object entry.
     pub async fn keep_alive_object_entry(
         &self,
@@ -104,15 +119,27 @@ impl Peer {
     ) -> Result<(), PeerError> {
         self.request(
             Method::POST,
-            &format!(
-                "objects/{}/keep-alive",
-                registered_object_entry.keep_alive_key
-            ),
+            &format!("objects/{}/keep-alive", registered_object_entry.id),
             Some(&ObjectKeepAliveRequest {
                 keep_alive_key: registered_object_entry.keep_alive_key.clone(),
             }),
         )
         .await?;
+
+        Ok(())
+    }
+
+    /// Download an object entry into the Iroh store.
+    pub async fn download_object_entry(&self, object_entry: &ObjectEntry) -> Result<(), PeerError> {
+        self.blobs
+            .client()
+            .download(
+                object_entry.file_hash.0,
+                object_entry.node_address.0.clone(),
+            )
+            .await?
+            .finish()
+            .await?;
 
         Ok(())
     }

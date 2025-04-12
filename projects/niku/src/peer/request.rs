@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use reqwest::{Method, Response};
 use serde::de::DeserializeOwned;

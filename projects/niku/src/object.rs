@@ -18,23 +18,17 @@ use utoipa::ToSchema;
 /// The kind of an object
 pub enum ObjectKind {
     /// The object is a file
-    File {
-        /// The name of the file
-        name: String,
-    },
+    File,
 
     /// The object is a folder
-    Folder {
-        /// The name of the folder
-        name: String,
-    },
+    Folder,
 }
 
 impl Display for ObjectKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let text = match self {
-            ObjectKind::File { name: _ } => "file",
-            ObjectKind::Folder { name: _ } => "folder",
+            ObjectKind::File => "file",
+            ObjectKind::Folder => "folder",
         };
 
         write!(f, "{}", text)
@@ -99,6 +93,9 @@ pub struct ObjectEntry {
 
     /// The file hash used by [iroh_blobs] protocol to access the file.
     pub file_hash: HashWrapper,
+
+    /// The name of the object.
+    pub name: String,
 
     /// The kind of object to be download.
     pub kind: ObjectKind,

@@ -6,6 +6,7 @@ use std::time::SystemTime;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use iroh_blobs::rpc::client::blobs::WrapOption;
+use iroh_blobs::store::{ExportFormat, ExportMode};
 use iroh_blobs::util::SetTagOption;
 use tokio::fs;
 use walkdir::WalkDir;
@@ -16,6 +17,21 @@ use super::{Peer, PeerError};
 use crate::object::{HashWrapper, NodeAddrWrapper, ObjectEntry, ObjectKind};
 
 impl Peer {
+    async fn create_temporal_zip_file(subfolder_name: &str) -> Result<PathBuf, PeerError> {
+        let now: DateTime<Utc> = SystemTime::now().into();
+
+        #[allow(clippy::expect_used)]
+        let mut temporal_zip_path = crate::get_cache_path();
+
+        temporal_zip_path.push(format!("{subfolder_name}/{}.zip", now.format("%+")));
+
+        fs::create_dir_all(temporal_zip_path.parent().ok_or(PeerError::FolderIsRoot)?)
+            .await
+            .map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
+
+        Ok(temporal_zip_path)
+    }
+
     fn compress_a_directory(src_path: &Path, zip_file: &File) -> Result<(), PeerError> {
         let walkdir = WalkDir::new(src_path)
             .into_iter()
@@ -60,6 +76,41 @@ impl Peer {
         Ok(())
     }
 
+    fn decompress_a_directory(
+        zip_file_path: &Path,
+        destination_path: &Path,
+    ) -> Result<(), PeerError> {
+        let file = std::fs::File::open(zip_file_path).map_err(PeerError::UnableToOpenAFile)?;
+        let mut archive = zip::ZipArchive::new(file)?;
+
+        for i in 0..archive.len() {
+            #[allow(clippy::expect_used)]
+            let mut file = archive
+                .by_index(i)
+                .expect("The file should always have an index");
+
+            let destination_path = destination_path.join(match file.enclosed_name() {
+                Some(path) => path,
+                None => continue,
+            });
+
+            if file.is_dir() {
+                std::fs::create_dir_all(&destination_path)
+                    .map_err(PeerError::UnableToCreateADirectory)?;
+            } else {
+                if let Some(p) = destination_path.parent() {
+                    if !p.exists() {
+                        std::fs::create_dir_all(p).unwrap();
+                    }
+                }
+                let mut outfile = std::fs::File::create(&destination_path).unwrap();
+                std::io::copy(&mut file, &mut outfile).unwrap();
+            }
+        }
+
+        Ok(())
+    }
+
     /// Creates a new object entry for a file.
     ///
     /// # Safety
@@ -68,19 +119,8 @@ impl Peer {
         &mut self,
         src_path: PathBuf,
     ) -> Result<(ObjectEntry, PathBuf), PeerError> {
-        let now: DateTime<Utc> = SystemTime::now().into();
-
-        #[allow(clippy::expect_used)]
-        let mut temporal_zip_path = crate::get_cache_path();
-
-        temporal_zip_path.push(format!(
-            "published-compressed-folders/{}.zip",
-            now.format("%+")
-        ));
-
-        fs::create_dir_all(temporal_zip_path.parent().ok_or(PeerError::FolderIsRoot)?)
-            .await
-            .map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
+        let temporal_zip_path =
+            Peer::create_temporal_zip_file("published-compressed-folders").await?;
 
         let temporal_zip_file = File::create(temporal_zip_path.clone())
             .map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
@@ -112,10 +152,51 @@ impl Peer {
             ObjectEntry {
                 node_address: NodeAddrWrapper(self.router.endpoint().node_addr().await?),
                 file_hash: HashWrapper(blob.hash),
-                kind: ObjectKind::Folder { name: file_name },
+                kind: ObjectKind::Folder,
+                name: file_name,
                 size: blob.size,
             },
             temporal_zip_path,
         ))
+    }
+
+    /// Export a previously downloaded folder object entry.
+    ///
+    /// # Safety
+    /// Doesn't check neither if the given object is for a folder
+    /// or if the object has been downloaded beforehand into the Iroh store.
+    pub async unsafe fn export_folder_object_entry(
+        &self,
+        object_entry: &ObjectEntry,
+        custom_output_path: &Option<PathBuf>,
+    ) -> Result<(PathBuf, Option<PathBuf>), PeerError> {
+        let output_path = if let Some(custom_output_path) = custom_output_path {
+            custom_output_path.clone()
+        } else {
+            let mut cwd_path =
+                std::env::current_dir().map_err(PeerError::CurrentWorkingDirectoryInvalid)?;
+            cwd_path.push(&object_entry.name);
+
+            cwd_path
+        };
+
+        let temporal_zip_path =
+            Peer::create_temporal_zip_file("downloaded-compressed-folders").await?;
+
+        self.blobs
+            .client()
+            .export(
+                object_entry.file_hash.0,
+                temporal_zip_path.to_owned(),
+                ExportFormat::Blob,
+                ExportMode::Copy,
+            )
+            .await?
+            .finish()
+            .await?;
+
+        Peer::decompress_a_directory(&temporal_zip_path, &output_path)?;
+
+        Ok((output_path.to_owned(), Some(temporal_zip_path)))
     }
 }
