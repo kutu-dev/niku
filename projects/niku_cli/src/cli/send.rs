@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
 use std::fs;
 use std::path::Path;
 use std::time::Duration;
@@ -5,10 +11,8 @@ use std::time::Duration;
 use anyhow::Result;
 use console::Emoji;
 use log::{debug, info};
-use niku::object::ObjectKind;
 use niku::peer::Peer;
-use tokio::{join, try_join};
-use tokio_util::sync::CancellationToken;
+use tokio::try_join;
 
 use super::{Cli, CliError};
 

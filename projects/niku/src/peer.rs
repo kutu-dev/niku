@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
 //! Code that implements a NIKU peer.
 
 mod file;
@@ -12,7 +18,6 @@ use iroh::Endpoint;
 use iroh_blobs::net_protocol::Blobs;
 use log::debug;
 use reqwest::Method;
-use serde_json::error;
 use thiserror::Error;
 use zip::result::ZipError;
 
@@ -49,27 +54,25 @@ pub enum PeerError {
     #[error("The backend returned the error: {0}")]
     BackendError(#[from] ErrorResponse),
 
-    /// Unable to write into the filesystem.
-    #[error("Unable to write into the filesystem: {0}")]
-    UnableToWritoIntoTheFilesystem(#[source] io::Error),
+    /// IO error.
+    #[error("IO error: {0}")]
+    IoError(#[from] io::Error),
 
+    /// Unable to finish the compression.
     #[error("Unable to finish the compression: {0}")]
     CompressionError(#[from] ZipError),
 
+    /// The given folder is the root.
     #[error("The given folder is the root")]
     FolderIsRoot,
 
+    /// Unable to strip the prefix of a path.
     #[error("Unable to strip the prefix of a path: {0}")]
     StripPrefixError(#[from] std::path::StripPrefixError),
 
-    #[error("The current working directory is not valid: {0}")]
-    CurrentWorkingDirectoryInvalid(#[source] io::Error),
-
-    #[error("Unable to open a file: {0}")]
-    UnableToOpenAFile(#[source] io::Error),
-
-    #[error("Unable to create a directory: {0}")]
-    UnableToCreateADirectory(#[source] io::Error),
+    /// The given ID is invalid.
+    #[error("The given ID is invalid")]
+    InvalidId,
 }
 
 impl Peer {
@@ -103,13 +106,19 @@ impl Peer {
         &self,
         object_entry: &ObjectEntry,
     ) -> Result<RegisteredObjectData, PeerError> {
-        self.request_expect_json(Method::PUT, "objects", Some(object_entry))
+        self.request_expect_json(Method::PUT, "objects", Some(object_entry), None)
             .await
     }
 
+    /// Retrieve an object from the correct backend.
     pub async fn retrieve_object_entry(&self, id: &str) -> Result<ObjectEntry, PeerError> {
-        self.request_expect_json(Method::GET, &format!("objects/{id}"), None::<&()>)
-            .await
+        self.request_expect_json(
+            Method::GET,
+            &format!("objects/{id}"),
+            None::<&()>,
+            Some(crate::get_backend_address_from_prefix(id).ok_or(PeerError::InvalidId)?),
+        )
+        .await
     }
 
     /// Keep alive the given object entry.
@@ -123,6 +132,10 @@ impl Peer {
             Some(&ObjectKeepAliveRequest {
                 keep_alive_key: registered_object_entry.keep_alive_key.clone(),
             }),
+            Some(
+                crate::get_backend_address_from_prefix(&registered_object_entry.id)
+                    .ok_or(PeerError::InvalidId)?,
+            ),
         )
         .await?;
 

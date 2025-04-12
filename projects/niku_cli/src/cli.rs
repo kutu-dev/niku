@@ -3,7 +3,6 @@
 
 //! Main internal library of the NIKU command line app.
 
-use std::ffi::IntoStringError;
 use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -12,7 +11,6 @@ use clap::{Parser, Subcommand};
 use log::error;
 use niku::peer::PeerError;
 use thiserror::Error;
-use tokio::join;
 use tokio::task::{JoinError, JoinHandle};
 use tokio_util::sync::CancellationToken;
 

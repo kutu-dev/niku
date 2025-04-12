@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 # SPDX-License-Identifier: MPL-2.0
+#
 {
   description = "Flake for the NIKU project.";
 
@@ -54,7 +55,9 @@
         taplo
         shfmt
         nixd
+        nil
         cargo-machete
+        ripgrep
         nodePackages.prettier
 
         (lib.hiPrio rust-bin.nightly."2025-04-10".rustfmt)

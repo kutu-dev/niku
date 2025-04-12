@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
@@ -25,9 +31,7 @@ impl Peer {
 
         temporal_zip_path.push(format!("{subfolder_name}/{}.zip", now.format("%+")));
 
-        fs::create_dir_all(temporal_zip_path.parent().ok_or(PeerError::FolderIsRoot)?)
-            .await
-            .map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
+        fs::create_dir_all(temporal_zip_path.parent().ok_or(PeerError::FolderIsRoot)?).await?;
 
         Ok(temporal_zip_path)
     }
@@ -55,13 +59,10 @@ impl Peer {
             // Some unzip tools unzip files with directory paths correctly, some do not!
             if path.is_file() {
                 zip.start_file(path_as_string, options)?;
-                let mut file =
-                    File::open(path).map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
+                let mut file = File::open(path)?;
 
-                file.read_to_end(&mut buffer)
-                    .map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
-                zip.write_all(&buffer)
-                    .map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
+                file.read_to_end(&mut buffer)?;
+                zip.write_all(&buffer)?;
                 buffer.clear();
             } else if !name.as_os_str().is_empty() {
                 // Only if not root! Avoids path spec / warning
@@ -80,7 +81,7 @@ impl Peer {
         zip_file_path: &Path,
         destination_path: &Path,
     ) -> Result<(), PeerError> {
-        let file = std::fs::File::open(zip_file_path).map_err(PeerError::UnableToOpenAFile)?;
+        let file = std::fs::File::open(zip_file_path)?;
         let mut archive = zip::ZipArchive::new(file)?;
 
         for i in 0..archive.len() {
@@ -95,16 +96,15 @@ impl Peer {
             });
 
             if file.is_dir() {
-                std::fs::create_dir_all(&destination_path)
-                    .map_err(PeerError::UnableToCreateADirectory)?;
+                std::fs::create_dir_all(&destination_path)?;
             } else {
                 if let Some(p) = destination_path.parent() {
                     if !p.exists() {
-                        std::fs::create_dir_all(p).unwrap();
+                        std::fs::create_dir_all(p)?;
                     }
                 }
-                let mut outfile = std::fs::File::create(&destination_path).unwrap();
-                std::io::copy(&mut file, &mut outfile).unwrap();
+                let mut outfile = std::fs::File::create(&destination_path)?;
+                std::io::copy(&mut file, &mut outfile)?;
             }
         }
 
@@ -122,8 +122,7 @@ impl Peer {
         let temporal_zip_path =
             Peer::create_temporal_zip_file("published-compressed-folders").await?;
 
-        let temporal_zip_file = File::create(temporal_zip_path.clone())
-            .map_err(PeerError::UnableToWritoIntoTheFilesystem)?;
+        let temporal_zip_file = File::create(temporal_zip_path.clone())?;
 
         Peer::compress_a_directory(&src_path, &temporal_zip_file)?;
 
@@ -173,8 +172,7 @@ impl Peer {
         let output_path = if let Some(custom_output_path) = custom_output_path {
             custom_output_path.clone()
         } else {
-            let mut cwd_path =
-                std::env::current_dir().map_err(PeerError::CurrentWorkingDirectoryInvalid)?;
+            let mut cwd_path = std::env::current_dir()?;
             cwd_path.push(&object_entry.name);
 
             cwd_path

@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
 use std::sync::Arc;
 
 use axum::extract::{Json, State};
@@ -45,7 +51,7 @@ pub(super) async fn put_objects(
     state.keep_alive_entries.insert(
         keep_alive_key.clone(),
         KeepAliveEntry {
-            ticket_id: id.clone(),
+            object_id: id.clone(),
             delete_task: create_object_delete_task(locked_state.clone(), &id, &keep_alive_key),
         },
     );

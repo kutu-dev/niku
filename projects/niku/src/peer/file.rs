@@ -1,4 +1,10 @@
-use std::path::{Path, PathBuf};
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
+use std::path::PathBuf;
 
 use anyhow::Result;
 use iroh_blobs::rpc::client::blobs::WrapOption;
@@ -55,8 +61,7 @@ impl Peer {
         let output_path = if let Some(custom_output_path) = custom_output_path {
             custom_output_path.clone()
         } else {
-            let mut cwd_path =
-                std::env::current_dir().map_err(PeerError::CurrentWorkingDirectoryInvalid)?;
+            let mut cwd_path = std::env::current_dir()?;
             cwd_path.push(&object_entry.name);
 
             cwd_path

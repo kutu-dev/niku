@@ -16,21 +16,27 @@ pub(crate) enum ServerError {
 
 impl IntoResponse for ServerError {
     fn into_response(self) -> Response {
-        // TODO: Change this to use a map and avoid all that from()s
         let (status, code, message) = match self {
             ServerError::UnknownObject => (
                 StatusCode::NOT_FOUND,
-                String::from("0001@NKBE"),
-                String::from("The requested object is not available"),
+                "0001@NKBE",
+                "The requested object is not available",
             ),
 
             ServerError::UnknownKeepAliveKey => (
                 StatusCode::NOT_FOUND,
-                String::from("0002@NKBE"),
-                String::from("The given keep alive key doesn't match for any registered object"),
+                "0002@NKBE",
+                "The given keep alive key doesn't match for any registered object",
             ),
         };
 
-        (status, Json(ErrorResponse::new(code, message))).into_response()
+        (
+            status,
+            Json(ErrorResponse::new(
+                String::from(code),
+                String::from(message),
+            )),
+        )
+            .into_response()
     }
 }

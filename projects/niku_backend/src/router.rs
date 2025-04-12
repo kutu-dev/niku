@@ -13,7 +13,6 @@ use std::time::Duration;
 
 use axum::extract::{MatchedPath, Request};
 use axum::Router;
-use rand::seq::IndexedRandom;
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tokio::time;

@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
 use std::sync::Arc;
 
 use axum::extract::{Json, Path, State};
@@ -22,8 +28,6 @@ pub(super) async fn post_objects_id_keep_alive(
     Path(id): Path<String>,
     Json(keep_alive_request): Json<ObjectKeepAliveRequest>,
 ) -> Result<(), ServerError> {
-    // TODO: This uses outdated terminology ("ticket") and (for some reason accepts any object ID as valid? happened once only).
-
     let mut state = locked_state.lock().await;
 
     let keep_alive_entry = state
@@ -32,7 +36,7 @@ pub(super) async fn post_objects_id_keep_alive(
         .ok_or(ServerError::UnknownKeepAliveKey)?;
 
     keep_alive_entry.delete_task.abort();
-    let ticket_id = keep_alive_entry.ticket_id.clone();
+    let object_id = keep_alive_entry.object_id.clone();
 
     // Drop the reference
     let _ = keep_alive_entry;
@@ -46,7 +50,7 @@ pub(super) async fn post_objects_id_keep_alive(
     state.keep_alive_entries.insert(
         keep_alive_request.keep_alive_key,
         KeepAliveEntry {
-            ticket_id,
+            object_id,
             delete_task,
         },
     );

@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+//
+// SPDX-License-Identifier: MPL-2.0
+
 use anyhow::Result;
 use reqwest::{Method, Response};
 use serde::de::DeserializeOwned;
@@ -12,11 +18,15 @@ impl Peer {
         method: Method,
         path: &str,
         json: Option<&T>,
+        with_address: Option<String>,
     ) -> Result<Response, PeerError> {
-        let request = self.client.request(
-            method,
-            format!("{}/{}", crate::get_recommended_backend_address(), path),
-        );
+        let address = if let Some(address) = with_address {
+            address
+        } else {
+            crate::get_recommended_backend_address()
+        };
+
+        let request = self.client.request(method, format!("{address}/{path}"));
 
         let request = if let Some(json) = json {
             request.json(json)
@@ -32,13 +42,14 @@ impl Peer {
         method: Method,
         path: &str,
         json: Option<&T>,
+        with_address: Option<String>,
     ) -> Result<S, PeerError>
     where
         T: Serialize,
         S: DeserializeOwned,
     {
         let response = self
-            .request(method, path, json)
+            .request(method, path, json, with_address)
             .await?
             .bytes()
             .await

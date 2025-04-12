@@ -53,7 +53,7 @@ parse_word_list_json!(VERBS, "data/verbs.json");
 
 #[derive(Debug)]
 struct KeepAliveEntry {
-    ticket_id: String,
+    object_id: String,
     delete_task: JoinHandle<()>,
 }
 
