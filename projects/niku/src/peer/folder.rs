@@ -7,17 +7,13 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use iroh_blobs::rpc::client::blobs::WrapOption;
 use iroh_blobs::util::SetTagOption;
-use log::debug;
 use tokio::fs;
-use walkdir::{DirEntry, WalkDir};
-use zip::result::ZipError;
+use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 use zip::CompressionMethod;
 
 use super::{Peer, PeerError};
-use crate::backend::{ErrorResponse, ObjectKeepAliveRequest, RegisteredObjectData};
 use crate::object::{HashWrapper, NodeAddrWrapper, ObjectEntry, ObjectKind};
-use crate::CACHE_PREFIX;
 
 impl Peer {
     fn compress_a_directory(src_path: &Path, zip_file: &File) -> Result<(), PeerError> {
@@ -71,7 +67,7 @@ impl Peer {
     pub async unsafe fn create_folder_object_entry(
         &mut self,
         src_path: PathBuf,
-    ) -> Result<ObjectEntry, PeerError> {
+    ) -> Result<(ObjectEntry, PathBuf), PeerError> {
         let now: DateTime<Utc> = SystemTime::now().into();
 
         #[allow(clippy::expect_used)]
@@ -112,11 +108,14 @@ impl Peer {
             .ok_or(PeerError::NotUnicodePath)?
             .to_string();
 
-        Ok(ObjectEntry {
-            node_address: NodeAddrWrapper(self.router.endpoint().node_addr().await?),
-            file_hash: HashWrapper(blob.hash),
-            kind: ObjectKind::Folder { name: file_name },
-            size: blob.size,
-        })
+        Ok((
+            ObjectEntry {
+                node_address: NodeAddrWrapper(self.router.endpoint().node_addr().await?),
+                file_hash: HashWrapper(blob.hash),
+                kind: ObjectKind::Folder { name: file_name },
+                size: blob.size,
+            },
+            temporal_zip_path,
+        ))
     }
 }

@@ -12,8 +12,7 @@ pub mod backend;
 pub mod object;
 pub mod peer;
 use std::path::PathBuf;
-pub(crate) const CACHE_PREFIX: &str = "app.niku.lib";
-use std::io;
+pub(crate) const CACHE_PREFIX: &str = "app.niku";
 
 /// Get the system dependant user cache storage path.
 pub fn get_cache_path() -> PathBuf {
@@ -23,14 +22,6 @@ pub fn get_cache_path() -> PathBuf {
     cache_path.push(CACHE_PREFIX);
 
     cache_path
-}
-
-/// Clean the content of the user cache store.
-pub fn prune_cache() -> io::Result<()> {
-    let cache_path = get_cache_path();
-    std::fs::remove_dir_all(cache_path)?;
-
-    Ok(())
 }
 
 /// Get the correct backend address given its prefix.

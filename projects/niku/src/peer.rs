@@ -3,10 +3,8 @@
 mod file;
 mod folder;
 mod request;
-mod text;
 
 use std::io;
-use std::time::Duration;
 
 use anyhow::Result;
 use iroh::protocol::Router;
@@ -15,7 +13,6 @@ use iroh_blobs::net_protocol::Blobs;
 use log::debug;
 use reqwest::Method;
 use thiserror::Error;
-use tokio::time;
 use zip::result::ZipError;
 
 use crate::backend::{ErrorResponse, ObjectKeepAliveRequest, RegisteredObjectData};
@@ -87,6 +84,7 @@ impl Peer {
 
     /// Safetly shutdown the peer.
     pub async fn async_drop(self) -> Result<(), PeerError> {
+        debug!("Shuting down the peer...");
         Ok(self.router.shutdown().await?)
     }
 

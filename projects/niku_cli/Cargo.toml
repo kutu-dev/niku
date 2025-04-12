@@ -22,6 +22,7 @@ term_size.workspace = true
 env_logger.workspace = true
 console.workspace = true
 tokio-util.workspace = true
+fs_extra.workspace = true
 
 [[bin]]
 name = "niku"
