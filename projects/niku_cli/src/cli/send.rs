@@ -12,6 +12,12 @@ use tokio_util::sync::CancellationToken;
 
 use super::{Cli, CliError};
 
+#[cfg(debug_assertions)]
+const KEEP_ALIVE_OBJECT_SECONDS: u64 = 2;
+
+#[cfg(not(debug_assertions))]
+const KEEP_ALIVE_OBJECT_SECONDS: u64 = 2 * 60;
+
 impl Cli {
     pub(super) async fn send(path: &Path) -> Result<(), CliError> {
         let mut peer = Peer::new().await?;
@@ -55,7 +61,7 @@ impl Cli {
         info!("{} Or use one of the official GUI apps:", Emoji("🌐", " "));
         info!("  https://niku.app/download");
 
-        let mut interval = tokio::time::interval(Duration::from_secs(1));
+        let mut interval = tokio::time::interval(Duration::from_secs(KEEP_ALIVE_OBJECT_SECONDS));
 
         loop {
             tokio::select! {

@@ -33,3 +33,6 @@ cargo fmt
 info Adding license headers
 # TODO:
 # addlicense -s -l "MPL-2.0" -c 'Jorge "Kutu" Dobón Blanco' ./**/*
+
+info Removing unnecesary Rust dependencies
+cargo machete --fix

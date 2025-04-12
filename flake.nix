@@ -54,6 +54,7 @@
         taplo
         shfmt
         nixd
+        cargo-machete
         nodePackages.prettier
 
         (lib.hiPrio rust-bin.nightly."2025-04-10".rustfmt)

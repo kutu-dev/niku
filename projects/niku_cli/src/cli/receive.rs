@@ -13,7 +13,11 @@ use tokio_util::sync::CancellationToken;
 use super::{Cli, CliError};
 
 impl Cli {
-    pub(super) async fn receive(id: &str, output: &Option<PathBuf>) -> Result<(), CliError> {
+    pub(super) async fn receive(
+        id: &str,
+        output: &Option<PathBuf>,
+        should_ask: bool,
+    ) -> Result<(), CliError> {
         let id = id.replace("_", "-");
 
         let output = match output {
@@ -25,19 +29,28 @@ impl Cli {
 
         let object_entry = peer.retrieve_object_entry(&id).await?;
 
-        eprint!(
-            "Download {} '{}' ({})? (Y/n): ",
-            object_entry.kind,
-            object_entry.name,
-            niku::format_bytes_with_unit(object_entry.size)
-        );
+        if should_ask {
+            eprint!(
+                "Download {} '{}' ({})? (Y/n): ",
+                object_entry.kind,
+                object_entry.name,
+                niku::format_bytes_with_unit(object_entry.size)
+            );
 
-        let answer: String = text_io::read!("{}\n");
-        let answer = answer.to_lowercase();
+            let answer: String = text_io::read!("{}\n");
+            let answer = answer.to_lowercase();
 
-        if !["y", "yes", ""].contains(&answer.as_str()) {
-            info!("Download canceled!");
-            return Ok(());
+            if !["y", "yes", ""].contains(&answer.as_str()) {
+                info!("Download canceled!");
+                return Ok(());
+            }
+        } else {
+            info!(
+                "Downloading {} '{}' ({})",
+                object_entry.kind,
+                object_entry.name,
+                niku::format_bytes_with_unit(object_entry.size)
+            )
         }
 
         let (task, token) = crate::cli::generic_wait("Downloading object").await;

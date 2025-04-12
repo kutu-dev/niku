@@ -4,21 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-niku = { version = "0.1.0", path = "../niku" }
+niku = { version = "0.0.0", path = "../niku" }
 anyhow.workspace = true
 clap.workspace = true
-iroh.workspace = true
-iroh-base.workspace = true
-iroh-blobs.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 log.workspace = true
-reqwest.workspace = true
-zip.workspace = true
-walkdir.workspace = true
 text_io.workspace = true
-dirs.workspace = true
-term_size.workspace = true
 env_logger.workspace = true
 console.workspace = true
 tokio-util.workspace = true

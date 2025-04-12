@@ -12,6 +12,7 @@ use clap::{Parser, Subcommand};
 use log::error;
 use niku::peer::PeerError;
 use thiserror::Error;
+use tokio::join;
 use tokio::task::{JoinError, JoinHandle};
 use tokio_util::sync::CancellationToken;
 
@@ -33,15 +34,21 @@ enum Commands {
     /// Prune the cache
     Prune,
 
-    /// Send an object.
+    /// Send an object
     Send { path: PathBuf },
 
-    /// Receive an object.
+    /// Receive an object
     Receive {
+        /// The ID of the object to download
         id: String,
 
         #[arg(short, long)]
+        /// A custom output path where the object should be downloaded
         output: Option<PathBuf>,
+
+        #[arg(short, long)]
+        /// Download the object without asking the user
+        yes: bool,
     },
 }
 
@@ -77,7 +84,7 @@ impl Cli {
         match &self.command {
             Commands::Prune => Cli::prune().await?,
             Commands::Send { path } => Cli::send(path).await?,
-            Commands::Receive { id, output } => Cli::receive(id, output).await?,
+            Commands::Receive { id, output, yes } => Cli::receive(id, output, !yes).await?,
         }
 
         Ok(())
