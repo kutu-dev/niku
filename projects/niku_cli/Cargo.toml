@@ -20,6 +20,8 @@ text_io.workspace = true
 dirs.workspace = true
 term_size.workspace = true
 env_logger.workspace = true
+console.workspace = true
+tokio-util.workspace = true
 
 [[bin]]
 name = "niku"

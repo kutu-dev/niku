@@ -6,10 +6,8 @@
 
 //! Structs and enums related to the concept of an object.
 
-use std::{
-    borrow::Cow,
-    fmt::{Debug, Display},
-};
+use std::borrow::Cow;
+use std::fmt::{Debug, Display};
 
 use iroh::NodeAddr;
 use iroh_blobs::Hash;
@@ -45,7 +43,7 @@ impl Display for ObjectKind {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 /// Wrapper around the [NodeAddr] used to implement external traits.
-pub struct NodeAddrWrapper(NodeAddr);
+pub struct NodeAddrWrapper(pub(crate) NodeAddr);
 
 impl utoipa::ToSchema for NodeAddrWrapper {
     fn name() -> Cow<'static, str> {
@@ -70,7 +68,7 @@ impl utoipa::PartialSchema for NodeAddrWrapper {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 /// Wrapper around the [Hash] used to implement external traits.
-pub struct HashWrapper(Hash);
+pub struct HashWrapper(pub(crate) Hash);
 
 impl utoipa::ToSchema for HashWrapper {
     fn name() -> Cow<'static, str> {

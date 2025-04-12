@@ -4,9 +4,14 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
+//! Main NIKU cli client.
+
+use std::io::Write;
+
 use clap::builder::styling::{AnsiColor, Style};
 use env_logger::Env;
 use log::{error, Level};
+use niku_cli::run;
 
 /// Set a useful default configuration for CLI logging with [env_logger].
 pub fn set_cli_logging() {
@@ -25,7 +30,7 @@ pub fn set_cli_logging() {
             let header = match record.level() {
                 Level::Trace => format!("[ {bold_magenta_style}TRACE{bold_magenta_style:#} ]"),
                 Level::Debug => format!("[ {bold_cyan_style}DEBUG{bold_cyan_style:#} ]"),
-                Level::Info => format!("[ {bold_green_style}INFO{bold_green_style:#} ]"),
+                Level::Info => String::from(""),
                 Level::Warn => format!("[ {bold_yellow_style}WARN{bold_yellow_style:#} ]"),
                 Level::Error => format!("[ {bold_red_style}ERROR{bold_red_style:#} ]"),
             };

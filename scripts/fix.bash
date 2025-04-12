@@ -6,8 +6,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit
 
 source ./scripts/modules/_logging.bash
 
-ls ./scripts/**/*.bash
-
 info Setting Bash script permissions
 chmod 744 ./scripts/**/*.bash
 

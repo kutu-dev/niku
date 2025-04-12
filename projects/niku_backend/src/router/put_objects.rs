@@ -8,9 +8,8 @@ use tracing::info;
 use uuid::Uuid;
 
 use crate::extensions::StringSliceExt;
-use crate::{KeepAliveEntry, SharedData, ADJECTIVES, NOUNS, VERBS};
-
 use crate::router::create_object_delete_task;
+use crate::{KeepAliveEntry, SharedData, ADJECTIVES, NOUNS, VERBS};
 
 #[utoipa::path(put, path = "/objects", request_body = ObjectEntry, responses((status = OK, body = RegisteredObjectData)))]
 /// Send a new object to be registered.

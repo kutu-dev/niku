@@ -24,11 +24,10 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::SharedData;
-
 use crate::router::get_objects_id::*;
 use crate::router::post_objects_id_keep_alive::*;
 use crate::router::put_objects::*;
+use crate::SharedData;
 
 pub(crate) fn create_router(state: Arc<Mutex<SharedData>>) -> Router {
     let (router, mut spec) = OpenApiRouter::new()

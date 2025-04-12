@@ -7,7 +7,7 @@ uuid = { version = "1.16.0", features = ["v4"] }
 axum = "0.8.1"
 tokio = { version = "1.44.1", features = ["full"] }
 anyhow = "1.0.97"
-clap = "4.5.32"
+clap = { version = "4.5.32", features = ["derive"] }
 iroh = "0.33.0"
 iroh-base = "0.33.0"
 iroh-blobs = { version = "0.33.1", features = ["rpc"] }
@@ -29,6 +29,9 @@ term_size = "0.3.2"
 utoipa = "5.3.1"
 utoipa-axum = "0.2.0"
 utoipa-swagger-ui = { version = "9.0.1", features = ["axum"] }
+console = "0.15.11"
+chrono = "0.4.40"
+tokio-util = "0.7.14"
 
 [workspace.dependencies.axum-server]
 version = "0.7.2"

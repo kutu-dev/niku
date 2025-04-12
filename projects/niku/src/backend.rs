@@ -6,7 +6,8 @@
 
 //! Shared structs use to communicate with the backend.
 
-use std::fmt::Debug;
+use std::fmt;
+use std::fmt::{Debug, Display};
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -28,7 +29,7 @@ pub struct ObjectKeepAliveRequest {
     pub keep_alive_key: String,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
 /// Data that is returned when the server has an error.
 pub struct ErrorResponse {
     /// The associated code with the raised error.
@@ -37,6 +38,14 @@ pub struct ErrorResponse {
     /// A helpful message about the error that has occurred.
     pub message: String,
 }
+
+impl Display for ErrorResponse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}: {}", self.code, self.message)
+    }
+}
+
+impl std::error::Error for ErrorResponse {}
 
 impl ErrorResponse {
     /// Crates a new [ErrorResponse]

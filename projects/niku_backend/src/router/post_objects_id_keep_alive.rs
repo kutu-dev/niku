@@ -6,9 +6,8 @@ use niku::object::ObjectEntry;
 use tokio::sync::Mutex;
 
 use crate::errors::ServerError;
-use crate::{KeepAliveEntry, SharedData};
-
 use crate::router::create_object_delete_task;
+use crate::{KeepAliveEntry, SharedData};
 
 #[utoipa::path(
     post,
