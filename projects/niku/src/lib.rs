@@ -8,6 +8,8 @@
 
 use log::debug;
 
+uniffi::setup_scaffolding!();
+
 pub mod backend;
 pub mod object;
 pub mod peer;
@@ -24,6 +26,7 @@ pub fn get_cache_path() -> PathBuf {
     cache_path
 }
 
+#[uniffi::export]
 /// Get the correct backend address given its prefix.
 pub(crate) fn get_backend_address_from_prefix(prefix: &str) -> Option<String> {
     let url = match prefix {

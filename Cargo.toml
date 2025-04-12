@@ -33,6 +33,7 @@ console = "0.15.11"
 chrono = "0.4.40"
 tokio-util = "0.7.14"
 fs_extra = "1.2.0"
+uniffi = "0.29.1"
 
 [workspace.dependencies.axum-server]
 version = "0.7.2"
